@@ -1,0 +1,6 @@
+ls /hasta la ruta donde estén los docs
+git init
+git add .
+git commit -m “mensaje”
+git remote add origin https://github.com/natalonso/Practica_Fundamentos.git
+git push origin master
