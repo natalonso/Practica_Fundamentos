@@ -14,6 +14,7 @@ git push origin master
 ###########################################################################################
 
 ls /hasta la ruta donde quieres crear el git local donde se descargarán los docs
+git init
 git remote add origin https://github.com/natalonso/Practica_Fundamentos.git
 git pull origin master
 #Modificar los documentos, avanzar con la práctica, etc, etc y volver a sincronizar con la nube:
