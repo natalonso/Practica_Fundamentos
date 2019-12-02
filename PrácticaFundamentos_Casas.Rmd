@@ -1,0 +1,261 @@
+---
+title: "Practica Fundamentos Casas"
+author: "Natalia Alonso, Beatriz y Susana Albarran"
+date: "2/12/2019"
+output: html_document
+---
+
+# Introducción
+
+Los datos que se van a analizar en este proyecto han sido obtenidos desde Kaggle. contienen precios de casas que fueron vendidas desde Mayo de 2014 hasta Mayo de 2015 en **King County** es un condado ubicado en el estado estadounidense de Washington. 
+
+Se van a seguir los siguientes pasos:
+
+ - Objetivo del estudio.  
+ - Descripción de los datos.  
+ - Análisis exploratorio de los datos.
+ - Tratamiento de datos Faltantes.
+ - Train ans Test.
+ - Aplicación de un modelo.
+
+
+
+
+# Objetivo del estudio
+
+Lo que queremos hacer con estos datos es crear un modelo para poder predecir los precios de las casas en King County , basándose en las variables que se incluyen en el dataset con el que se va a trabajar.
+
+# Los datos (descripción)
+
+Los datos con los que se van a trabajar han sido extraidos de Kaggle: https://www.kaggle.com/harlfoxem/housesalesprediction
+
+*A continuación se van a describir las variables:
+
+ **1.- Id**: Es un identificador para cada casa que se ha vendido.  
+
+ **2.- Date**: Fecha de venta de la casa.  
+
+ **3.- Price**: Precio de venta de la casa.  
+
+ **4.- Bedrooms**: Núnero de habitaciones que tiene la casa.  
+
+ **5.- Bathrooms**: Número de cuartos de baño.Es importante destacar que 0.5 cuenta como baño que tiene ducha y no bañera.
+
+ **6.- sqft_living**: pies cuadrados habitables.  
+
+ **7.- sqft_lot**: pies cuadrados del exterior de la casa.  
+
+ **8.- Floors**: Número de plantas, hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido.  
+Ejemplo: Buhardilla.  
+
+ **9.- Waterfront**: Vistas al agua.Es una variable Dummy que nos dice si las casas tienen o no vistas al agua. 
+
+ **10.- View**: Vistas de la casa. Es una variable que toma valores de 0 a 4.
+
+ **11.- Condition**: Condiciones de la casa. Toma valores de 1 a 5. 
+
+ **12.- Grade**: grados de calidad en la construccion. Toma valores de 1 a 13.
+
+ **13.- Conditions**: condiciones la casa. Toma valores de 1 a 5.
+
+ **14.- sqft_above**: Pies cuadrados por encima del suelo.  
+
+ **15.- sqft_basement**: Pies cuadrados del sótano.
+
+ **16.- yr_built**: Año de construcción.
+
+ **17.- yr_renovated**: Año en el que la casa se ha realizado *
+
+ **18.- Zipcode**: En qué área se encuentra la casa. 
+
+ **19.- lat**: Latitud.
+
+ **20.- long**: Longitud
+
+ **21.- sqft_living15**: Pies cuadrados del interior de las 15 casas más cercanas.
+
+ **22.- sqft_lot15**: Pies cuadrados del exterior de las 15 casas más cercanas.
+
+A continuación se van a cargar los datos en R: 
+
+```{r lectura_datos, include=FALSE}
+
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/kc_house_data.csv")
+
+#datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos
+#/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
+
+#datos <- read.csv("C:/Users/susi_/Desktop/Datas/kc_house_data.csv")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lattice)
+library(dplyr)
+library(VIM)
+library(mice)
+library(DMwR2)
+library(knitr)
+library(kableExtra)
+library(htmltools)
+library(bsplus)
+library(RColorBrewer)
+library(GGally)
+library(ggplot2)
+
+```
+
+Visualizamos una muestra de los datos:
+
+```{r}
+
+ head(datos)   
+```
+
+
+## Análisis exploratorio de datos
+
+Se muestra un resumen de los datos con los que se va a trabajar: :
+```{r}
+str(datos)
+summary(datos)
+```
+
+A continuación se va a realizar un **estudio univariante** para ver como se comporta cada variable:  
+
+**-Variable Price**: es numérica, se va a pintar un histograma y la densidad para ver su comportamiento. 
+
+```{r}
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+```
+
+Se observa que el precio de las casas es asimétrico,  tiene mayor frecuencia hacia el lado izquierdo de la distribución, en estos casos se suele hacer una **transformación logarítmica**
+```{r}
+
+datos$log_price<- log10(datos$price)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+```
+  
+  Como se observa con la transformación logarítmica de la variable price ('log_price') obtenemos una distribución más asimétrica. Más aelante veremos como se comporta con el resto de variables.
+  
+ 
+**-Variable Bedroom**: es una variable categórica. 
+```{r}
+
+table(datos$bedrooms)
+class(datos$bedrooms) 
+```
+ 
+ Al generar la tabla vemos que hay casas con **0** habitaciones y con **11** y **33** , más adelante tendremos que ver que ocurre con estos datos.
+ 
+```{r}
+# como es numerica, la pasamos a factor
+datos$bedrooms <- as.factor(datos$bedrooms)
+
+```
+ 
+**-Variable bathrooms**: como es categórica se va arealizar una tabla. 
+
+```{r}
+table(datos$bathrooms)
+datos$bathrooms<-as.factor(datos$bathrooms)
+```
+
+Analizando la tabla se observa que el número de baños puede tomar valores con 0.25. el número de baños se contabiliza por las piezas, cada baño tiene 4 piezas. 0.25 es una pieza, 0.5 dos piezas,0.75 son 3 piezas y 1 es baño completo.  
+
+Se observa que hay 10 casas con cero baños, puede que estos datos se tengan que tratar más adelante.
+
+**-Variable sqt_living**: variable numérica que indica los pies cuadrados habitables de la vivienda. Se va a pintar un histograma y la densidad para ver su comportamiento. 
+
+```{r}
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+```
+
+
+Al igual que el precio de la vivienda, no es asimétrica y los pies cudrados de las casas, están cincetrados a la izquierda. Por lo que vamos a realizar una transformación logarítmica:
+```{r}
+datos$log_sqft_living<- log10(datos$sqft_living)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+```
+
+**- Variable  sqft_lot**: pies cuadrados del terreno. Es variable numérica, vamos a estudiar como se comporta:
+
+```{r}
+
+ggplot(datos, aes(x=sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") 
+
+
+#revisar si hacemos algún tipo de transformación,yo he aplicado de nuevo la logarítmica.
+
+datos$log_sqft_lot<- log10(datos$sqft_lot)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+```
+
+
+**- Variable  floors**: Número de plantas de la casa,hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido. (Ejem: Buhardilla). Es categórica.
+
+```{r}
+
+datos$floors<-as.factor(datos$floors)
+table(datos$floors)
+``` 
+
+
+
+**- Variable waterfront**: Es categórica.Toma valores 0 y 1 (Dummy).  
+
+ - 0 = no tiene vistas al agua (Se ha confirmado este dato con la latitud y longitud de la casa en google maps.)
+ - 1 = tiene vistas al agua.
+
+```{r}
+datos$waterfront<-as.factor(datos$waterfront)
+table(datos$waterfront)
+
+```
+ Se observa que casi todas las casas no tienen vistas al agua.
+ 
+**- Variable view**: Es categórica.Toma valores de 1 a 4. 
+
+```{r}
+
+table(datos$view)
+datos$view <- as.factor(datos$view)
+
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
