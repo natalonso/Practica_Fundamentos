@@ -1,6 +1,6 @@
 ---
 title: "Practica Fundamentos Casas"
-author: "Natalia Alonso, Beatriz y Susana Albarran"
+author: "Natalia Alonso, Beatriz Martín y Susana Albarran"
 date: "2/12/2019"
 output: html_document
 ---
@@ -13,9 +13,11 @@ Se van a seguir los siguientes pasos:
 
  - Objetivo del estudio.  
  - Descripción de los datos.  
- - Análisis exploratorio de los datos.
- - Tratamiento de datos Faltantes.
- - Train ans Test.
+ - Análisis exploratorio de los datos.(Univariante)
+ - Transformación de variables cuantitativas. 
+ - Procesado de variables cualitativas.
+ - Detección, tratamiento e imputación de datos faltantes.
+ - Train and Test.
  - Aplicación de un modelo.
 
 
@@ -25,7 +27,7 @@ Se van a seguir los siguientes pasos:
 
 Lo que queremos hacer con estos datos es crear un modelo para poder predecir los precios de las casas en King County , basándose en las variables que se incluyen en el dataset con el que se va a trabajar.
 
-# Los datos (descripción)
+# Descripción de los datos
 
 Los datos con los que se van a trabajar han sido extraidos de Kaggle: https://www.kaggle.com/harlfoxem/housesalesprediction
 
@@ -80,10 +82,9 @@ A continuación se van a cargar los datos en R:
 
 ```{r lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/kc_house_data.csv")
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
-#datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos
-#/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
+#datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/susi_/Desktop/Datas/kc_house_data.csv")
 ```
@@ -102,6 +103,7 @@ library(bsplus)
 library(RColorBrewer)
 library(GGally)
 library(ggplot2)
+library(corrplot)
 
 ```
 
@@ -109,11 +111,11 @@ Visualizamos una muestra de los datos:
 
 ```{r}
 
- head(datos)   
+head(datos)   
 ```
 
 
-## Análisis exploratorio de datos
+## Análisis exploratorio de datos (Univariante)
 
 Se muestra un resumen de los datos con los que se va a trabajar: :
 ```{r}
@@ -132,18 +134,7 @@ options(repr.plot.width=6, repr.plot.height=3,align="center")
 ggplot(datos, aes(x=price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
 ```
 
-Se observa que el precio de las casas es asimétrico,  tiene mayor frecuencia hacia el lado izquierdo de la distribución, en estos casos se suele hacer una **transformación logarítmica**
-```{r}
-
-datos$log_price<- log10(datos$price)
-
-options(scipen=999)
-options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos, aes(x=log_price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
-```
-  
-  Como se observa con la transformación logarítmica de la variable price ('log_price') obtenemos una distribución más asimétrica. Más aelante veremos como se comporta con el resto de variables.
-  
+Se observa que el precio de las casas es asimétrico,  tiene mayor frecuencia hacia el lado izquierdo de la distribución, en estos casos se suele hacer una **transformación logarítmica**.
  
 **-Variable Bedroom**: es una variable categórica. 
 ```{r}
@@ -152,7 +143,7 @@ table(datos$bedrooms)
 class(datos$bedrooms) 
 ```
  
- Al generar la tabla vemos que hay casas con **0** habitaciones y con **11** y **33** , más adelante tendremos que ver que ocurre con estos datos.
+ Al generar la tabla vemos que hay casas con **0** habitaciones y **33** , más adelante tendremos que ver que ocurre con estos datos.
  
 ```{r}
 # como es numerica, la pasamos a factor
@@ -160,18 +151,25 @@ datos$bedrooms <- as.factor(datos$bedrooms)
 
 ```
  
-**-Variable bathrooms**: como es categórica se va arealizar una tabla. 
+**-Variable bathrooms**: como es categórica se va a realizar una tabla. 
 
 ```{r}
 table(datos$bathrooms)
-datos$bathrooms<-as.factor(datos$bathrooms)
 ```
 
-Analizando la tabla se observa que el número de baños puede tomar valores con 0.25. el número de baños se contabiliza por las piezas, cada baño tiene 4 piezas. 0.25 es una pieza, 0.5 dos piezas,0.75 son 3 piezas y 1 es baño completo.  
+Analizando la tabla se observa que el número de baños puede tomar valores con 0.25. el número de baños se contabiliza por las piezas, cada baño tiene 4 piezas. 
+
+-Baño (4 piezas)= Inodoro, lavabo, bañera y ducha.(1 unidad)-Baño completo
+
+-Baño (3 piezas) = Inodoro, lavabo y ducha. (0.75 unidad).-Baño con ducha  
+
+-Baño (2 piezas) = Inodoro, lavabo. (0.5 unidad)- Aseo
+
+-Baño (1 pieza) = Inodoro (0.25 unidad)-Aseo
 
 Se observa que hay 10 casas con cero baños, puede que estos datos se tengan que tratar más adelante.
 
-**-Variable sqt_living**: variable numérica que indica los pies cuadrados habitables de la vivienda. Se va a pintar un histograma y la densidad para ver su comportamiento. 
+**-Variable sqft_living**: variable numérica que indica los pies cuadrados habitables de la vivienda. Se va a pintar un histograma y la densidad para ver su comportamiento. 
 
 ```{r}
 
@@ -180,30 +178,13 @@ options(repr.plot.width=6, repr.plot.height=3,align="center")
 ggplot(datos, aes(x=sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
 ```
 
-
-Al igual que el precio de la vivienda, no es asimétrica y los pies cudrados de las casas, están cincetrados a la izquierda. Por lo que vamos a realizar una transformación logarítmica:
-```{r}
-datos$log_sqft_living<- log10(datos$sqft_living)
-
-options(scipen=999)
-options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos, aes(x=log_sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
-```
-
 **- Variable  sqft_lot**: pies cuadrados del terreno. Es variable numérica, vamos a estudiar como se comporta:
+
+Al igual que el precio de la vivienda, no es simétrica y los pies cudrados de las casas, están concetrados a la izquierda. Por lo que vamos a realizar una transformación logarítmica.
 
 ```{r}
 
 ggplot(datos, aes(x=sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") 
-
-
-#revisar si hacemos algún tipo de transformación,yo he aplicado de nuevo la logarítmica.
-
-datos$log_sqft_lot<- log10(datos$sqft_lot)
-
-options(scipen=999)
-options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos, aes(x=log_sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
 
 ```
 
@@ -239,23 +220,300 @@ datos$view <- as.factor(datos$view)
 
 ```
 
+**- Variable condition**: Es categórica. Toma valores de 1 a 5.
 
-## R Markdown
+```{r}
+datos$condition <- as.factor(datos$condition)
+table(datos$condition)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+**- Variable grade**: Es categórica. Mide la calidad de la construcción. Toma valores de 1 a 13.
+```{r}
 
-You can also embed plots, for example:
+table(datos$grade)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+**- sqft_above  **: Es numérica. Pies cuadrados por encima del suelo.
+
+```{r}
+
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=sqft_above)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+```
+
+
+**- yr_built  **: Año de construcción de la casa. (1900-2015)
+
+```{r}
+table(datos$yr_built)
+
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=yr_built)) + geom_histogram(colour="black",bins=30, fill="#E1AF00") 
+
+```
+
+**- Variable yr_renovates  **: Año en el que la casa tuvo una ´renovación'.
+
+```{r}
+table(datos$yr_renovated)
+
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=yr_renovated)) + geom_histogram(colour="black",bins=30, fill="#E1AF00") 
+
+```
+
+ Se observa que hay un año "0" y entendemos que son casas que no han tenido ningún tipo de renovación. Se podría categorizar como:
+ 
+ - yr_renovated = 0 , No ha tenido ninguna renovación
+ - yr_renovated = resto de años , Sí ha tenido renovación
+
+
+**- Variable zipcode **: En qué área se encuentra la casa (Son códigos postales de Seattle). Es categórica.  
+
+
+```{r}
+datos$zipcode<-as.factor(datos$zipcode)
+table(datos$zipcode)
+
+```
+
+**- Variable sqtft_basement **: pies cuadrados del sótano. Es numérica.  
+
+```{r}
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=sqft_basement)) + geom_histogram(bins=30, colour="black", fill="#E1AF00") 
+
+```
+
+Se observa que alrededor de unas 12.500 no tienen sótano, no sé si aplica alguna transformación o se podría categorizar con casas que sí tienen sótano con casas que no tienen sótano.
+
+A lo mejor hay que ver como se comporta con otras variables.
+
+**- Variable lat y long **: indica la ubicación de la casa, latitud, longitud. 
+
+A lo mejor se puede dibujar una gráfica dependiendo de la zona geográfica y el precio de las casas.
+
+**- Variable sqft_living15 **: pies cuadrados de la zona habitable de la casa de los 15 vecinos más cercanos. Es numérica.
+
+```{r}
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=sqft_living15)) + geom_histogram(bins=30, colour="black", fill="#E1AF00") 
+
+#tranformamos??? 
+
+```
+
+**- Variable sqft_lot15**, pies cuadrados del exterior de la casa de los 15 vecinos más cercanos.Es numérica.
+
+```{r}
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=sqft_lot15)) + geom_histogram(bins=30, colour="black", fill="#E1AF00") 
+
+#tranformamos??? 
+
+```
+# Transformación de variables cuantitativas
+
+- Transformación Variable `price'
+
+```{r}
+
+datos$log_price<- log10(datos$price)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+```
+ 
+Como se observa con la transformación logarítmica de la variable price ('log_price') obtenemos una distribución más asimétrica. Más aelante veremos como se comporta con el resto de variables.
+  
+ - Transformación Variable `sqft_living' 
+ 
+ 
+```{r}
+datos$log_sqft_living<- log10(datos$sqft_living)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+```
+
+- Tranformación de la varibles 'sqft_lot'
+
+```{r}
+#revisar si hacemos algún tipo de transformación,yo he aplicado de nuevo la logarítmica.
+
+datos$log_sqft_lot<- log10(datos$sqft_lot)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+```
+
+
+- Tranformación de la variable 'sqft_above'
+
+```{r}
+#tranformamos???
+
+datos$log_sqft_above<- log10(datos$sqft_above)
+
+options(scipen=999)
+options(repr.plot.width=6, repr.plot.height=3,align="center")
+ggplot(datos, aes(x=log_sqft_above)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+```
+
+- Variable sqtft_basement
+
+- Living15
+
+- Lot15
+
+# Procesado de variables cualitativas
+
+-Bathrooms
+
+```{r}
+datos$bathrooms <- as.numeric(datos$bathrooms)
+datos$bathrooms_categ <- cut(datos$bathrooms,breaks = c(-1,0.25,1,2,3,4,5,6,7,8),labels=c(0,1,2,3,4,5,6,7,8))
+
+datos$bathrooms_categ <- as.factor(datos$bathrooms_categ)
+table(datos$bathrooms_categ)
+```
+
+-Grade
+
+Se va a volver a categorizar del siguiente modo:
+
+ - Valores de 1-4 = calidad baja se va a categorizar con valor 0
+ - Valores de 5-9 = calidad media se va a categorizar con valor 1
+ - Valores de 10-13 = calidad alta se va a categorizar con valor 2
+ 
+```{r}
+datos$grade<-as.numeric(datos$grade)
+datos$grade_categ <- cut(datos$grade, breaks = c(1,4,9,13), labels = c(0,1,2))
+
+table(datos$grade_categ)
+```
+
+-yr_renovated
+
+```{r}
+table(datos$yr_renovated)
+datos$yr_renovated_catg <-cut(datos$yr_renovated, breaks=c(-0.5,1933, 2015), labels= c("0","1"))
+
+table(datos$yr_renovated_catg)
+```
+
+ 
+
+# Detección, tratamiento e imputación de datos faltantes
+
+En nuestros datos no tenemos datos faltantes, pero gracias al análisis exploratorio previamente hecho nos hemos dado cuenta de que tenemos outliers en diferentes variables.
+
+```{r}
+#Contar el total de NAs en la base de datos
+sum(is.na(datos))
+
+```
+
+En el caso de la variable *Bedroom* hemos visto que hay 13 casas con 0 habitaciones y una con 33. Vamos a comparar la variable número de habitaciones con los pies cuadrados habitables. Porque con un razonamiento lógico cuanto más espacio más número de habitaciones.
+
+```{r}
+
+ggplot(datos, aes(x=bedrooms, y=log_sqft_living, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
+
+```
+
+Con el Boxplot observamos lo siguiente:  
+
+- La casa que tiene **33 habitaciones** tiene menos pies cuadrados que el resto de las casas, por lo que confirma que es un dato erróneo.(Podríamos elimarlo)  
+
+- Las casas que tienen **0 habitaciones** (13 casas), tienen más pies cuadrados, por lo que sería también un dato erróneo, ya que revisando en google maps por las corrdenadas longitud y la latitud son casas que incluso tienen varias plantas.
+
+En el caso de la variable *Bathroom* hemos visto que hay 10 casas con 0 baños. Vamos a comparar la variable número de baños con los pies cuadrados habitables. Porque con un razonamiento lógico cuanto más espacio más número de baños.
+
+```{r}
+
+ggplot(datos, aes(x=bathrooms_categ, y=log_sqft_living, fill=bathrooms_categ)) + geom_boxplot() + guides(fill=FALSE)
+
+```
+
+
+
+# Selección de Variables.
+
+Para hacer una selección de variables vamos a estudiar como se comportan y si esxiste alguna relación entre ellas.
+
+-Podríamos estudiar el precio con el resto de variables, por ejemplo:
+ -Sqft_living
+ -Sqft_
+ 
+-Hacer una matriz de correlaciones, pero sólo puede hacerse con variables numéricas.
+
+```{r}
+
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+
+# Para imputar los datos faltantes o erróneos ver qué técnica usar:
+datos$bedrooms[datos$bedrooms==0] = mean(datos$bedrooms)
+datos$bedrooms[datos$bedrooms==33] = mean(datos$bedrooms)
+
+datos %>% filter(bedrooms==0)
+
+correlacion <- datos %>%  select(bedrooms, bathrooms,floors, sqft_living, sqft_lot, sqft_above, sqft_basement, waterfront, view, condition, grade, sqft_living15, sqft_lot15, lat, long, price) %>% 
+cor()
+
+corrplot(correlacion,method="number", type="upper")
+
+```
+
+# NOTAS DE LA REUNIÓN DE HOY:
+
+# ENFRENTAR CADA VARIABLE EXPLICATIVA CON LA RESPUESTA Y VER LA RELACIÓN
+# MATRIZ DE CORRELACIÓN DE LAS VARIABLES EXPLICATIVAS FRENTE A LA RESPUESTA
+# UNA VEZ SELECCIONADAS LAS VARIABLES CON MAYOR RELACIÓN CON LA RESPUESTA, MIRAR LA CORRELACIÓN ENTRE ELLAS Y EN CASO DE ESTAR CORRELADAS SELECCIONAR UNA DE ELLAS Y JUSTIFICAR POR QUÉ!!!
+# TRAIN AND TEST ANTES DE TODO, ANTES TRANSFORMAR Y ANTES DE VER RELACIONES (SOLO PODRIA HACERSE COMO MUCHO DESPUES DEL ANALISIS UNIVARIANTE)
+# categorizar sqft-lot
+
+# Crear nuevo dataframe
+# Train, test y validación
+
+```{r}
+
+num_total=nrow(datos)
+set.seed(123456) #reproductividad
+
+# 70% para train
+indices_train = sample(1:num_total, .7*num_total)
+datos_train = datos[indices_train,]
+
+# 15% para test
+indices=seq(1:num_total)
+indices_test=indices[-indices_train]
+indices_test1 = sample(indices_test, .15*num_total)
+datos_test = datos[indices_test1,]
+
+# 15% para validacion
+indices_validacion=indices[c(-indices_train,-indices_test1)]
+datos_validacion=datos[indices_validacion,]
+
+```
