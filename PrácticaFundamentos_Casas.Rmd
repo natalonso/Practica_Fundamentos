@@ -21,17 +21,16 @@ Se van a seguir los siguientes pasos:
  - Aplicación de un modelo.
 
 
-
-
 # Objetivo del estudio
 
 Lo que queremos hacer con estos datos es crear un modelo para poder predecir los precios de las casas en King County , basándose en las variables que se incluyen en el dataset con el que se va a trabajar.
+
 
 # Descripción de los datos
 
 Los datos con los que se van a trabajar han sido extraidos de Kaggle: https://www.kaggle.com/harlfoxem/housesalesprediction
 
-*A continuación se van a describir las variables:
+A continuación se van a describir las variables:
 
  **1.- Id**: Es un identificador para cada casa que se ha vendido.  
 
@@ -78,15 +77,15 @@ Ejemplo: Buhardilla.
 
  **22.- sqft_lot15**: Pies cuadrados del exterior de las 15 casas más cercanas.
 
-A continuación se van a cargar los datos en R: 
+A continuación, se van a cargar los datos en R: 
 
 ```{r lectura_datos, include=FALSE}
 
-#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
 
-datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
@@ -104,13 +103,12 @@ library(RColorBrewer)
 library(GGally)
 library(ggplot2)
 library(corrplot)
-
+library(vcd)
 ```
 
 Visualizamos una muestra de los datos:
 
 ```{r}
-
 head(datos)   
 ```
 
@@ -123,7 +121,7 @@ str(datos)
 summary(datos)
 ```
 
-A continuación se va a realizar un **estudio univariante** para ver como se comporta cada variable:  
+A continuación, se va a realizar un **estudio univariante** para ver como se comporta cada variable:  
 
 **-Variable Price**: es numérica, se va a pintar un histograma y la densidad para ver su comportamiento. 
 
@@ -132,13 +130,13 @@ A continuación se va a realizar un **estudio univariante** para ver como se com
 options(scipen=999)
 options(repr.plot.width=6, repr.plot.height=3,align="center")
 ggplot(datos, aes(x=price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
 ```
 
 Se observa que el precio de las casas es asimétrico,  tiene mayor frecuencia hacia el lado izquierdo de la distribución, en estos casos se suele hacer una **transformación logarítmica**.
  
 **-Variable Bedroom**: es una variable categórica. 
-```{r}
-
+```{r}S
 table(datos$bedrooms)
 class(datos$bedrooms) 
 ```
@@ -147,7 +145,7 @@ class(datos$bedrooms)
  
 ```{r}
 # como es numerica, la pasamos a factor
-datos$bedrooms <- as.factor(datos$bedrooms)
+datos$bedrooms <- as.factor(datos$bedrooms) #REVISAR SI CATEGORIZAR O NO
 
 ```
  
@@ -296,7 +294,7 @@ ggplot(datos, aes(x=sqft_basement)) + geom_histogram(bins=30, colour="black", fi
 
 ```
 
-Se observa que alrededor de unas 12.500 no tienen sótano, no sé si aplica alguna transformación o se podría categorizar con casas que sí tienen sótano con casas que no tienen sótano.
+Se observa que alrededor de unas 12.500 no tienen sótano, no sé si aplicar alguna transformación o se podría categorizar con casas que sí tienen sótano con casas que no tienen sótano.
 
 A lo mejor hay que ver como se comporta con otras variables.
 
@@ -327,6 +325,7 @@ ggplot(datos, aes(x=sqft_lot15)) + geom_histogram(bins=30, colour="black", fill=
 #tranformamos??? 
 
 ```
+
 # Transformación de variables cuantitativas
 
 - Transformación Variable `price'
@@ -423,7 +422,6 @@ datos$yr_renovated_catg <-cut(datos$yr_renovated, breaks=c(-0.5,1933, 2015), lab
 table(datos$yr_renovated_catg)
 ```
 
- 
 
 # Detección, tratamiento e imputación de datos faltantes
 
@@ -440,6 +438,10 @@ En el caso de la variable *Bedroom* hemos visto que hay 13 casas con 0 habitacio
 ```{r}
 
 ggplot(datos, aes(x=bedrooms, y=log_sqft_living, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
+# Para imputar los datos faltantes o erróneos ver qué técnica usar:
+# datos$bedrooms[datos$bedrooms==0] = mean(datos$bedrooms)
+# datos$bedrooms[datos$bedrooms==33] = mean(datos$bedrooms)
+# Repasar qué técnicas usar
 
 ```
 
@@ -452,9 +454,7 @@ Con el Boxplot observamos lo siguiente:
 En el caso de la variable *Bathroom* hemos visto que hay 10 casas con 0 baños. Vamos a comparar la variable número de baños con los pies cuadrados habitables. Porque con un razonamiento lógico cuanto más espacio más número de baños.
 
 ```{r}
-
 ggplot(datos, aes(x=bathrooms_categ, y=log_sqft_living, fill=bathrooms_categ)) + geom_boxplot() + guides(fill=FALSE)
-
 ```
 
 
@@ -469,35 +469,30 @@ Para hacer una selección de variables vamos a estudiar como se comportan y si e
  
 -Hacer una matriz de correlaciones, pero sólo puede hacerse con variables numéricas.
 
+
 ```{r}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+# Para ver relacion entre variables categóricas ha dicho que se podrían usar tablas de contingencia o scatterplots, 
 
-# Para imputar los datos faltantes o erróneos ver qué técnica usar:
-datos$bedrooms[datos$bedrooms==0] = mean(datos$bedrooms)
-datos$bedrooms[datos$bedrooms==33] = mean(datos$bedrooms)
+art <- xtabs(~ grade_categ + yr_renovated_catg, data = datos)
+mosaic(art, gp = shading_max, split_vertical = TRUE,
+       main="Relación entre grade y yr_renovated")
 
-datos %>% filter(bedrooms==0)
 
-correlacion <- datos %>%  select(bedrooms, bathrooms,floors, sqft_living, sqft_lot, sqft_above, sqft_basement, waterfront, view, condition, grade, sqft_living15, sqft_lot15, lat, long, price) %>% 
-cor()
+# Revisar qué variable meter a la matriz
 
-corrplot(correlacion,method="number", type="upper")
+#correlacion <- datos %>%  select(bedrooms, bathrooms,floors, sqft_living, sqft_lot, sqft_above, sqft_basement, waterfront, view, condition, grade, sqft_living15, sqft_lot15, lat, long, price) %>% 
+#cor()
+
+#corrplot(correlacion,method="number", type="upper")
+
 
 ```
 
-# NOTAS DE LA REUNIÓN DE HOY:
 
-# ENFRENTAR CADA VARIABLE EXPLICATIVA CON LA RESPUESTA Y VER LA RELACIÓN
-# MATRIZ DE CORRELACIÓN DE LAS VARIABLES EXPLICATIVAS FRENTE A LA RESPUESTA
-# UNA VEZ SELECCIONADAS LAS VARIABLES CON MAYOR RELACIÓN CON LA RESPUESTA, MIRAR LA CORRELACIÓN ENTRE ELLAS Y EN CASO DE ESTAR CORRELADAS SELECCIONAR UNA DE ELLAS Y JUSTIFICAR POR QUÉ!!!
-# TRAIN AND TEST ANTES DE TODO, ANTES TRANSFORMAR Y ANTES DE VER RELACIONES (SOLO PODRIA HACERSE COMO MUCHO DESPUES DEL ANALISIS UNIVARIANTE)
-# categorizar sqft-lot
-
-# Crear nuevo dataframe
-# Train, test y validación
 
 ```{r}
+# PENDIENTE VER DONDE PONER ESTO:
 
 num_total=nrow(datos)
 set.seed(123456) #reproductividad
@@ -517,3 +512,21 @@ indices_validacion=indices[c(-indices_train,-indices_test1)]
 datos_validacion=datos[indices_validacion,]
 
 ```
+
+# Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
+
+
+
+
+### NOTAS DE LA REUNIÓN DE HOY:
+
+- ENFRENTAR CADA VARIABLE EXPLICATIVA CON LA RESPUESTA Y VER LA RELACIÓN
+- MATRIZ DE CORRELACIÓN DE LAS VARIABLES EXPLICATIVAS FRENTE A LA RESPUESTA
+- UNA VEZ SELECCIONADAS LAS VARIABLES CON MAYOR RELACIÓN CON LA RESPUESTA, MIRAR LA CORRELACIÓN ENTRE ELLAS Y EN CASO DE ESTAR CORRELADAS SELECCIONAR UNA DE ELLAS Y JUSTIFICAR POR QUÉ!!!
+- TRAIN AND TEST ANTES DE TODO, ANTES TRANSFORMAR Y ANTES DE VER RELACIONES (SOLO PODRIA HACERSE COMO MUCHO DESPUES DEL ANALISIS UNIVARIANTE)
+- categorizar sqft-lot
+- A la hora de imputar datos, no sólo borrar los registros erróneos, usar alguna otra técnica de imputación para explicarla, si no en esa parte no tendremos nota.
+- Una vez transformadas las variables hay que reescarlar antes del modelo.
+
+- Crear nuevo dataframe
+- Train, test y validación
