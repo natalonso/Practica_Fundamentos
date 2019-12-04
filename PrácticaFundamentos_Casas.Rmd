@@ -7,24 +7,24 @@ output: html_document
 
 # Introducción
 
-Los datos que se van a analizar en este proyecto han sido obtenidos desde Kaggle. contienen precios de casas que fueron vendidas desde Mayo de 2014 hasta Mayo de 2015 en **King County** es un condado ubicado en el estado estadounidense de Washington. 
+Los datos que se van a analizar en este proyecto han sido obtenidos desde Kaggle. Contienen precios de casas que fueron vendidas desde mayo de 2014 hasta mayo de 2015 en **King County** que es un condado ubicado en el estado estadounidense de Washington. 
 
 Se van a seguir los siguientes pasos:
 
- - Objetivo del estudio.  
- - Descripción de los datos.  
- - Análisis exploratorio de los datos.(Univariante)
- - Transformación de variables cuantitativas. 
- - Procesado de variables cualitativas.
- - Detección, tratamiento e imputación de datos faltantes.
- - Train and Test.
- - Aplicación de un modelo.
+ - Objetivo del estudio  
+ - Descripción de los datos  
+ - Análisis exploratorio de datos (univariante)
+ - Train, test y validación
+ - Transformación de variables cuantitativas 
+ - Procesado de variables cualitativas
+ - Detección, tratamiento e imputación de datos faltantes
+ - Selección de Variables
+ - Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
 
 
 # Objetivo del estudio
 
-Lo que queremos hacer con estos datos es crear un modelo para poder predecir los precios de las casas en King County , basándose en las variables que se incluyen en el dataset con el que se va a trabajar.
-
+Lo que queremos hacer con estos datos es crear un modelo para poder predecir los precios de las casas en King County, basándose en las variables que se incluyen en el dataset con el que se va a trabajar.
 
 # Descripción de los datos
 
@@ -32,58 +32,55 @@ Los datos con los que se van a trabajar han sido extraidos de Kaggle: https://ww
 
 A continuación se van a describir las variables:
 
- **1.- Id**: Es un identificador para cada casa que se ha vendido.  
+ **1.- Id**: es un identificador para cada casa que se ha vendido.  
 
- **2.- Date**: Fecha de venta de la casa.  
+ **2.- Date**: fecha de venta de la casa.  
 
- **3.- Price**: Precio de venta de la casa.  
+ **3.- Price**: precio de venta de la casa.  
 
- **4.- Bedrooms**: Núnero de habitaciones que tiene la casa.  
+ **4.- Bedrooms**: núnero de habitaciones que tiene la casa.  
 
- **5.- Bathrooms**: Número de cuartos de baño.Es importante destacar que 0.5 cuenta como baño que tiene ducha y no bañera.
+ **5.- Bathrooms**: número de cuartos de baño. Es importante destacar que 0.5 cuenta como baño que tiene ducha y no bañera. Esto lo tratamos con más detalle en el apartado de análisis de datos.
 
  **6.- sqft_living**: pies cuadrados habitables.  
 
- **7.- sqft_lot**: pies cuadrados del exterior de la casa.  
+ **7.- sqft_lot**: pies cuadrados del terreno de la parcela.  
 
- **8.- Floors**: Número de plantas, hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido.  
-Ejemplo: Buhardilla.  
+ **8.- Floors**: número de plantas. Hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido. Por ejemplo la buhardilla.  
 
- **9.- Waterfront**: Vistas al agua.Es una variable Dummy que nos dice si las casas tienen o no vistas al agua. 
+ **9.- Waterfront**: vistas al agua. Es una variable Dummy que nos dice si las casas tienen o no vistas al agua. 
 
- **10.- View**: Vistas de la casa. Es una variable que toma valores de 0 a 4.
+ **10.- View**: vistas de la casa. Es una variable que toma valores de 0 a 4.
 
- **11.- Condition**: Condiciones de la casa. Toma valores de 1 a 5. 
+ **11.- Condition**: condiciones de la casa. Toma valores de 1 a 5. 
 
  **12.- Grade**: grados de calidad en la construccion. Toma valores de 1 a 13.
 
- **13.- Conditions**: condiciones la casa. Toma valores de 1 a 5.
+ **13.- sqft_above**: pies cuadrados por encima del suelo.  
 
- **14.- sqft_above**: Pies cuadrados por encima del suelo.  
+ **14.- sqft_basement**: pies cuadrados del sótano.
 
- **15.- sqft_basement**: Pies cuadrados del sótano.
+ **15.- yr_built**: año de construcción.
 
- **16.- yr_built**: Año de construcción.
+ **16.- yr_renovated**: año en el que la casa se ha realizado.
 
- **17.- yr_renovated**: Año en el que la casa se ha realizado *
+ **17.- Zipcode**: en qué área se encuentra la casa. 
 
- **18.- Zipcode**: En qué área se encuentra la casa. 
+ **18.- lat**: latitud.
 
- **19.- lat**: Latitud.
+ **19.- long**: longitud.
 
- **20.- long**: Longitud
+ **20.- sqft_living15**: pies cuadrados del interior de las 15 casas más cercanas.
 
- **21.- sqft_living15**: Pies cuadrados del interior de las 15 casas más cercanas.
-
- **22.- sqft_lot15**: Pies cuadrados del exterior de las 15 casas más cercanas.
+ **21.- sqft_lot15**: pies cuadrados del terreno de las 15 casas más cercanas.
 
 A continuación, se van a cargar los datos en R: 
 
 ```{r lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
-#datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
+datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
@@ -104,24 +101,26 @@ library(GGally)
 library(ggplot2)
 library(corrplot)
 library(vcd)
+library(DT)
 ```
 
 Visualizamos una muestra de los datos:
 
 ```{r}
-head(datos)   
+datatable(head(datos))   
 ```
 
 
 ## Análisis exploratorio de datos (Univariante)
 
-Se muestra un resumen de los datos con los que se va a trabajar: :
+Se muestra un resumen de los datos con los que se va a trabajar:
+
 ```{r}
 str(datos)
 summary(datos)
 ```
 
-A continuación, se va a realizar un **estudio univariante** para ver como se comporta cada variable:  
+A continuación, se va a realizar un **estudio univariante** para ver cómo se comporta cada variable:  
 
 **-Variable Price**: es numérica, se va a pintar un histograma y la densidad para ver su comportamiento. 
 
@@ -133,41 +132,44 @@ ggplot(datos, aes(x=price)) + geom_histogram(aes(y=..density..), bins=30, colour
 
 ```
 
-Se observa que el precio de las casas es asimétrico,  tiene mayor frecuencia hacia el lado izquierdo de la distribución, en estos casos se suele hacer una **transformación logarítmica**.
+Se observa que el precio de las casas es asimétrico, tiene mayor frecuencia hacia el lado izquierdo de la distribución. En estos casos se suele hacer una **transformación logarítmica**.
  
-**-Variable Bedroom**: es una variable categórica. 
-```{r}S
+**-Variable Bedroom**: es categórica.
+
+```{r}
 table(datos$bedrooms)
 class(datos$bedrooms) 
 ```
  
- Al generar la tabla vemos que hay casas con **0** habitaciones y **33** , más adelante tendremos que ver que ocurre con estos datos.
+Al generar la tabla vemos que hay casas con **0** habitaciones y **33** , más adelante tendremos que ver qué ocurre con estos datos.
  
 ```{r}
+#■QUITAMOS ESTO?? YO CREO QUE SI. Si lo quitamos tendriamos que poner que en vez de categorica es numerica
+
 # como es numerica, la pasamos a factor
-datos$bedrooms <- as.factor(datos$bedrooms) #REVISAR SI CATEGORIZAR O NO
+#datos$bedrooms <- as.factor(datos$bedrooms) #REVISAR SI CATEGORIZAR O NO
 
 ```
  
-**-Variable bathrooms**: como es categórica se va a realizar una tabla. 
+**-Variable bathrooms**: como es categórica, se va a realizar una tabla. 
 
 ```{r}
 table(datos$bathrooms)
 ```
 
-Analizando la tabla se observa que el número de baños puede tomar valores con 0.25. el número de baños se contabiliza por las piezas, cada baño tiene 4 piezas. 
+Analizando la tabla se observa que el número de baños puede tomar valores decimales de 0.25 en 0.25. El número de baños se contabiliza por las piezas, cada baño completo tiene 4 piezas. 
 
--Baño (4 piezas)= Inodoro, lavabo, bañera y ducha.(1 unidad)-Baño completo
+-Baño (4 piezas) -> Inodoro, lavabo, bañera y ducha.(1 unidad) -Baño completo
 
--Baño (3 piezas) = Inodoro, lavabo y ducha. (0.75 unidad).-Baño con ducha  
+-Baño (3 piezas) -> Inodoro, lavabo y ducha. (0.75 unidad) - Baño con ducha  
 
--Baño (2 piezas) = Inodoro, lavabo. (0.5 unidad)- Aseo
+-Baño (2 piezas) -> Inodoro y lavabo. (0.5 unidad) - Aseo
 
--Baño (1 pieza) = Inodoro (0.25 unidad)-Aseo
+-Baño (1 pieza) -> Inodoro (0.25 unidad) - Aseo
 
 Se observa que hay 10 casas con cero baños, puede que estos datos se tengan que tratar más adelante.
 
-**-Variable sqft_living**: variable numérica que indica los pies cuadrados habitables de la vivienda. Se va a pintar un histograma y la densidad para ver su comportamiento. 
+**-Variable sqft_living**: es numérica. Se va a pintar un histograma y la densidad para ver su comportamiento. 
 
 ```{r}
 
@@ -207,6 +209,7 @@ datos$waterfront<-as.factor(datos$waterfront)
 table(datos$waterfront)
 
 ```
+
  Se observa que casi todas las casas no tienen vistas al agua.
  
 **- Variable view**: Es categórica.Toma valores de 1 a 4. 
@@ -227,6 +230,7 @@ table(datos$condition)
 ```
 
 **- Variable grade**: Es categórica. Mide la calidad de la construcción. Toma valores de 1 a 13.
+
 ```{r}
 
 table(datos$grade)
@@ -257,7 +261,7 @@ ggplot(datos, aes(x=yr_built)) + geom_histogram(colour="black",bins=30, fill="#E
 
 ```
 
-**- Variable yr_renovates  **: Año en el que la casa tuvo una ´renovación'.
+**- Variable yr_renovates  **: Año en el que la casa tuvo una ´renovación´.
 
 ```{r}
 table(datos$yr_renovated)
@@ -323,6 +327,29 @@ options(repr.plot.width=6, repr.plot.height=3,align="center")
 ggplot(datos, aes(x=sqft_lot15)) + geom_histogram(bins=30, colour="black", fill="#E1AF00") 
 
 #tranformamos??? 
+
+```
+
+# Train, test y validación
+
+```{r}
+
+num_total=nrow(datos)
+set.seed(123456) #reproductividad
+
+# 70% para train
+indices_train = sample(1:num_total, .7*num_total)
+datos_train = datos[indices_train,]
+
+# 15% para test
+indices=seq(1:num_total)
+indices_test=indices[-indices_train]
+indices_test1 = sample(indices_test, .15*num_total)
+datos_test = datos[indices_test1,]
+
+# 15% para validacion
+indices_validacion=indices[c(-indices_train,-indices_test1)]
+datos_validacion=datos[indices_validacion,]
 
 ```
 
@@ -459,7 +486,7 @@ ggplot(datos, aes(x=bathrooms_categ, y=log_sqft_living, fill=bathrooms_categ)) +
 
 
 
-# Selección de Variables.
+# Selección de variable
 
 Para hacer una selección de variables vamos a estudiar como se comportan y si esxiste alguna relación entre ellas.
 
@@ -489,36 +516,9 @@ mosaic(art, gp = shading_max, split_vertical = TRUE,
 
 ```
 
-
-
-```{r}
-# PENDIENTE VER DONDE PONER ESTO:
-
-num_total=nrow(datos)
-set.seed(123456) #reproductividad
-
-# 70% para train
-indices_train = sample(1:num_total, .7*num_total)
-datos_train = datos[indices_train,]
-
-# 15% para test
-indices=seq(1:num_total)
-indices_test=indices[-indices_train]
-indices_test1 = sample(indices_test, .15*num_total)
-datos_test = datos[indices_test1,]
-
-# 15% para validacion
-indices_validacion=indices[c(-indices_train,-indices_test1)]
-datos_validacion=datos[indices_validacion,]
-
-```
-
 # Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
 
-
-
-
-### NOTAS DE LA REUNIÓN DE HOY:
+# NOTAS DE LA REUNIÓN DE HOY:
 
 - ENFRENTAR CADA VARIABLE EXPLICATIVA CON LA RESPUESTA Y VER LA RELACIÓN
 - MATRIZ DE CORRELACIÓN DE LAS VARIABLES EXPLICATIVAS FRENTE A LA RESPUESTA
