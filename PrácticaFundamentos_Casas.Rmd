@@ -82,11 +82,11 @@ A continuación se van a cargar los datos en R:
 
 ```{r lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Práctica/kc_house_data.csv")
 
-#datos <- read.csv("C:/Users/susi_/Desktop/Datas/kc_house_data.csv")
+datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
