@@ -82,7 +82,7 @@ A continuación, se van a cargar los datos en R:
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de #Análisis de datos/Práctica/kc_house_data.csv")
 
-datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
@@ -102,6 +102,7 @@ library(ggplot2)
 library(corrplot)
 library(vcd)
 library(DT)
+library(gridExtra)
 ```
 
 # Train, test y validación
@@ -170,14 +171,27 @@ Se observa que el precio de las casas es asimétrico, tiene mayor frecuencia hac
 table(datos_train$bedrooms)
 class(datos_train$bedrooms) 
 ```
- 
-Al generar la tabla vemos que hay casas con **0** habitaciones y **33** , más adelante tendremos que ver qué ocurre con estos datos.
- 
+
 ```{r}
 
-#datos$bedrooms <- as.factor(datos$bedrooms) #REVISAR SI CATEGORIZAR O NO
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p1<-ggplot(datos_train, aes(x=bedrooms)) + geom_histogram(colour="black", bins =30,fill="tomato")
+
+
+p2<-ggplot(datos_train, aes(x=as.factor(bedrooms), y=price, fill=as.factor(bedrooms))) + geom_boxplot()+
+labs(x="bedrooms")+theme(legend.position="none")
+
+
+grid.arrange(p1, p2, nrow = 1)
+              
 
 ```
+
+Al generar la tabla y los gráficos se observa que hay casas con **0** habitaciones y **33** , más adelante tendremos que ver qué ocurre con estos datos.
+
+Podemos decir que segun aumenta el número de habitaciones aumenta el precio de las casas.
+
  
 **-Variable bathrooms**: es de tipo entero.
 
@@ -195,24 +209,58 @@ Analizando la tabla se observa que el número de baños puede tomar valores deci
 
 -Baño (1 pieza) -> Inodoro (0.25 unidad) - Aseo
 
-Se observa que hay 10 casas con cero baños, puede que estos datos se tengan que tratar más adelante.
+Mas adelante categorizaremos esta variable.
+
+Se observa que hay 7 casas con cero baños, puede que estos datos se tengan que tratar más adelante.
+
+```{r}
+
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p3<-ggplot(datos_train, aes(x=bathrooms)) + geom_histogram(colour="black", bins =30,fill="tomato")
+
+
+p4<-ggplot(datos_train, aes(x=as.factor(bathrooms), y=price, fill=as.factor(bathrooms))) + geom_boxplot()+
+labs(x="bathrooms")+theme(legend.position="none")
+
+grid.arrange(p3, p4, nrow = 1)
+              
+
+```
+
 
 **-Variable sqft_living**: es numérica. Se va a pintar un histograma y la densidad para ver su comportamiento. 
 
 ```{r}
 
-options(scipen=999)
-options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos_train, aes(x=sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p5<-ggplot(datos_train, aes(x=sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+p6<-ggplot(datos_train, aes(sqft_living, price)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = F, method = "lm", color = "red") +
+  scale_y_continuous(breaks = seq(0,8000000, by = 1000000)) 
+
+grid.arrange(p5,p6, nrow=1)
 ```
+ En este segundo gráfico se ha enfrentado con la variable price, se ve que hay una relación creciente, a medida que aumentan los pies cuadrados aumenta el precio de las casas.
+
 
 **- Variable  sqft_lot**: pies cuadrados del terreno. Es variable numérica, vamos a estudiar como se comporta:
 
-Al igual que el precio de la vivienda, no es simétrica y los pies cudrados de las casas, están concetrados a la izquierda. Por lo que vamos a realizar una transformación logarítmica.
+Al igual que el precio de la vivienda, no es simétrica y los pies cudrados de las casas, están concetrados a la izquierda. Por lo que se podría realizar una transformación logarítmica.
 
 ```{r}
 
-ggplot(datos_train, aes(x=sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="tomato") 
+p7<-ggplot(datos_train, aes(x=sqft_lot)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="tomato") 
+
+p8<-ggplot(datos_train, aes(sqft_lot, price)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = F, method = "lm", color = "blue") +
+  scale_y_continuous(breaks = seq(0,8000000, by = 1000000)) 
+
+grid.arrange(p7,p8, nrow=1)
 
 ```
 
@@ -225,6 +273,17 @@ ggplot(datos_train, aes(x=sqft_lot)) + geom_histogram(aes(y=..density..), bins=3
 table(datos_train$floors)
 
 ``` 
+```{r}
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p9<-ggplot(datos_train, aes(x=floors)) + geom_histogram(colour="black", bins =30,fill="tomato")
+
+
+p10<-ggplot(datos_train, aes(x=as.factor(floors), y=price, fill=as.factor(floors))) + geom_boxplot()+
+labs(x="floors")+theme(legend.position="none")
+
+grid.arrange(p9,p10, nrow=1)
+```
 
 
 
@@ -238,8 +297,18 @@ table(datos_train$floors)
 table(datos_train$waterfront)
 
 ```
+```{r}
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p11<-ggplot(datos_train, aes(x=waterfront)) + geom_histogram(colour="black", bins =30,fill="tomato")
 
- Se observa que casi todas las casas no tienen vistas al agua.
+
+p12<-ggplot(datos_train, aes(x=as.factor(waterfront), y=price, fill=as.factor(waterfront))) + geom_boxplot()+
+labs(x="waterfront")+theme(legend.position="none")
+
+grid.arrange(p11,p12, nrow=1)
+```
+ Se observa que casi todas las casas no tienen vistas al agua y que las casas que tienen vistas son más caras respecos de las uqe no tienen vistas al agua.
  
 **- Variable view**: Es de tipo entero.Toma valores de 1 a 4. 
 
@@ -249,6 +318,20 @@ table(datos_train$view)
 #datos_train$view <- as.factor(datos_train$view)
 
 ```
+```{r}
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p11<-ggplot(datos_train, aes(x=view)) + geom_histogram(colour="black", bins =30,fill="tomato")
+
+
+p12<-ggplot(datos_train, aes(x=as.factor(view), y=price, fill=as.factor(view))) + geom_boxplot()+
+labs(x="view")+theme(legend.position="none")
+
+grid.arrange(p11,p12, nrow=1)
+
+```
+ Se observa que la mayoría de las casas no tienen buenas vistas y que las casas que tienen vistas son más caras respeto de las que no tienen vistas al agua.
+
 
 **- Variable condition**: Es de tipo entero. Toma valores de 1 a 5.
 
@@ -258,6 +341,21 @@ table(datos_train$condition)
 
 ```
 
+```{r}
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p13<-ggplot(datos_train, aes(x=condition)) + geom_histogram(colour="black", bins =30,fill="tomato")
+
+
+p14<-ggplot(datos_train, aes(x=as.factor(condition), y=price, fill=as.factor(condition))) + geom_boxplot()+
+labs(x="condition")+theme(legend.position="none")
+
+grid.arrange(p13,p14, nrow=1)
+```
+
+
+
+
 **- Variable grade**: Es de tipo entero. Mide la calidad de la construcción. Toma valores de 1 a 13.
 
 ```{r}
@@ -265,15 +363,35 @@ table(datos_train$condition)
 table(datos_train$grade)
 
 ```
+```{r}
+#(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p14<-ggplot(datos_train, aes(x=grade)) + geom_histogram(colour="black", bins =30,fill="tomato")
 
-**- sqft_above  **: Es numérica. Pies cuadrados por encima del suelo.
+
+p15<-ggplot(datos_train, aes(x=as.factor(grade), y=price, fill=as.factor(grade))) + geom_boxplot()+
+labs(x="grade")+theme(legend.position="none")
+
+grid.arrange(p14,p15, nrow=1)
+```
+Cuando se enfrenta con la variable precio se ve que a mayor grado es mayor el precio de las casas.
+
+
+**- sqft_above  **: Es numérica. Pies cuadrados por encima del suelo. Esta variable hay que aclarar que es la diferencia entre sqft_living y sqft_basement.
 
 ```{r}
 
 
-options(scipen=999)
-options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos_train, aes(x=sqft_above)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p16<-ggplot(datos_train, aes(x=sqft_above)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+
+p17<-ggplot(datos_train, aes(sqft_above, price)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = F, method = "lm", color = "blue") +
+  scale_y_continuous(breaks = seq(0,8000000, by = 1000000)) 
+
+grid.arrange(p16,p17, nrow=1)
 
 ```
 
@@ -284,9 +402,15 @@ ggplot(datos_train, aes(x=sqft_above)) + geom_histogram(aes(y=..density..), bins
 table(datos_train$yr_built)
 
 
-options(scipen=999)
-options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos_train, aes(x=yr_built)) + geom_histogram(colour="black",bins=30, fill="#E1AF00") 
+#options(scipen=999)
+#options(repr.plot.width=6, repr.plot.height=3,align="center")
+p18<-ggplot(datos_train, aes(x=yr_built)) + geom_histogram(colour="black",bins=30, fill="#E1AF00") 
+
+p19<-ggplot(datos_train, aes(x=as.factor(yr_built), y=price, fill= as.factor(yr_built))) + geom_boxplot()+
+labs(x="yr_built")+theme(legend.position="none")
+
+grid.arrange(p18,p19, nrow=1)
+
 
 ```
 
@@ -299,6 +423,8 @@ table(datos_train$yr_renovated)
 options(scipen=999)
 options(repr.plot.width=6, repr.plot.height=3,align="center")
 ggplot(datos_train, aes(x=yr_renovated)) + geom_histogram(colour="black",bins=30, fill="#E1AF00") 
+
+
 
 ```
 
@@ -415,7 +541,7 @@ En el segundo gráfico enfrentamos **price** con las siguientes variables:
 -  grade
 ```{r}
 
-plot2<-ggpairs(datos_train,columns=c(3,8:12),mapping = aes(color = "red") )
+plot2<-ggpairs(datos_train,columns=c(3,9:12,15,16),mapping = aes(color = "red") )
 
 plot2
 
@@ -608,8 +734,9 @@ datos_train$bathrooms_categ <- cut(datos_train$bathrooms,breaks = c(-1,0.25,1,2,
 #datos_train$bathrooms_categ <- as.factor(datos_train$bathrooms_categ)
 table(datos_train$bathrooms_categ)
 
-#Dibujamos como queda categorizada enfrentada con la variable "price"
-ggplot(datos_train, aes(x=as.factor(datos_train$bathrooms_categ), y=log_price, fill=as.factor(datos_train$bathrooms_categ))) + geom_boxplot()
+#Dibujamos como queda categorizada enfrentada con la variable "price" ya transformada:
+ggplot(datos_train, aes(x=as.factor(datos_train$bathrooms_categ), y=log_price, fill=as.factor(datos_train$bathrooms_categ))) + geom_boxplot()+
+labs(x="bathrooms_categ")+theme(legend.position="none")
 
 ```
 
@@ -624,13 +751,13 @@ Se va a volver a categorizar del siguiente modo:
  
 ```{r}
 datos_train$grade<-as.numeric(datos_train$grade)
-datos_train$grade_categ <- cut(datos_train$grade, breaks = c(1,4,9,13), labels = c(0,1,2))
+datos_train$grade_categ <- cut(datos_train$grade, breaks = c(0,4,9,13), labels = c(0,1,2))
 
 table(datos_train$grade_categ)
 ```
 ```{r}
 #Dibujamos como queda categorizada enfrentada con la variable "price"
-ggplot(datos_train, aes(x=as.factor(datos_train$grade_categ), y=price, fill=as.factor(datos_train$grade_categ))) + geom_boxplot()
+ggplot(datos_train, aes(x=as.factor(datos_train$grade_categ), y=log_price, fill=as.factor(datos_train$grade_categ))) + geom_boxplot() + labs(x="grade_categ")+theme(legend.position="none")
 ```
 
 -yr_renovated
@@ -645,7 +772,7 @@ table(datos_train$yr_renovated_catg)
 
 ```{r}
 #Dibujamos como queda categorizada enfrentada con la variable "price"
-ggplot(datos_train, aes(x=as.factor(datos_train$yr_renovated_catg), y=log_price, fill=as.factor(datos_train$yr_renovated_catg))) + geom_boxplot()
+ggplot(datos_train, aes(x=as.factor(datos_train$yr_renovated_catg), y=log_price, fill=as.factor(datos_train$yr_renovated_catg))) + geom_boxplot() + labs(x="grade_train")+theme(legend.position="none")
 ```
 # Detección, tratamiento e imputación de datos faltantes
 
@@ -657,17 +784,67 @@ sum(is.na(datos_train))
 
 ```
 
-En el caso de la variable *Bedroom* hemos visto que hay 13 casas con 0 habitaciones y una con 33. Vamos a comparar la variable número de habitaciones con los pies cuadrados habitables. Porque con un razonamiento lógico cuanto más espacio más número de habitaciones.
+En el caso de la variable **Bedrooms** hemos visto que hay 13 casas con 0 habitaciones y una con 33. Como en nuestro estudio no tenemos datos faltantes lo que vamos a hacer a continuación es suponer que la casa con 33 habitaciones es un NA.
+
+```{r}
+datos_train2<-datos_train
+datos_train2$bedrooms[datos_train2$bedrooms==33] <-NA
+#sum(is.na(datos_train))
+
+```
+Ahora lo vamos a imputar mediante regresión simple:
 
 ```{r}
 
-ggplot(datos_train, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
+datos_mice<-datos_train2[,c(3:12,15,16)]
+
+```
+
+```{r}
+# Imputación simple, regresión ordinaria:
+
+imp_1 = mice(datos_mice, method = "norm.predict", m=1) # Cálculo método de imputación
+
+datostrain_mice = complete(imp_1)  # Imputación de valores sustiyuye 33 por 3.19 habitaciones
+
+#datostrain_mice$postion<-row.names(datostrain_mice)
+```
+Ha imputado con el valor 3.19, es decir 3 habitaciones.
+
+
+
+```{r}
+#sólo hago los gráficos para ver el valor que ha imputado
+ggplot(datostrain_mice, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
 # Para imputar los datos faltantes o erróneos ver qué técnica usar:
 # datos$bedrooms[datos$bedrooms==0] = mean(datos$bedrooms)
 # datos$bedrooms[datos$bedrooms==33] = mean(datos$bedrooms)
 # Repasar qué técnicas usar
 
 ```
+```{r}
+
+datos_mice2<-datos_train2[,c(3:12,15,16)]
+```
+
+```{r}
+# Imputación multiple, regresión estocástica:
+
+imp_2 = mice(datos_mice2, method = "norm.nob")# Cálculo método de imputación
+datostrain_mice2 = complete(imp_2)  # Imputación de valores sustiyuye 33 por 3.33 habitaciones
+
+#datostrain_mice$postion<-row.names(datostrain_mice)
+```
+```{r}
+
+#sólo hago los gráficos para ver el valor que ha imputado 
+
+ggplot(datostrain_mice2, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
+
+```
+
+
+
 
 Con el Boxplot observamos lo siguiente:  
 
@@ -690,35 +867,24 @@ ggplot(datos_train, aes(x=as.factor(floors), y=log_price, fill=floors)) + geom_b
 
 # Selección de variable
 
-Para hacer una selección de variables vamos a estudiar como se comportan y si esxiste alguna relación entre ellas.
-
--Podríamos estudiar el precio con el resto de variables, por ejemplo:
- -Sqft_living
- -Sqft_
- 
--Hacer una matriz de correlaciones, pero sólo puede hacerse con variables numéricas.
+Para hacer una selección de variables ya hemos estudiado como se comportan con la variable precio. A continuación se va a realizar una matriz de correlaciones para terminar de decidir con qué variables nos quedamos:
 
 
 ```{r}
-
-# Para ver relacion entre variables categóricas ha dicho que se podrían usar tablas de contingencia o scatterplots, 
-
-#art <- xtabs(~ grade_categ + yr_renovated_catg, data = datos_train)
-#mosaic(art, gp = shading_max, split_vertical = TRUE,
-       #main="Relación entre grade y yr_renovated")
-
-
-# Revisar qué variable meter a la matriz
-
-#correlacion <- datos %>%  select(bedrooms, bathrooms,floors, sqft_living, sqft_lot, sqft_above, sqft_basement, waterfront, view, condition, grade, sqft_living15, sqft_lot15, lat, long, price) %>% 
-#cor()
-
-#corrplot(correlacion,method="number", type="upper")
-
-
+datos_train_cor <- datos_train[,3:21]
+correlation_matrix <- cor(datos_train_cor, method = "spearman")
+corrplot(correlation_matrix, method = "color", tl.srt=45, addCoef.col ="black", number.cex =0.6,
+         tl.cex = 0.7,tl.col="black", type= "upper")
 ```
 
+
+
 # Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
+
+
+
+
+
 
 # NOTAS DE LA REUNIÓN DE HOY:
 
