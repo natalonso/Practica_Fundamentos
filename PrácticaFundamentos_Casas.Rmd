@@ -146,6 +146,10 @@ datatable(head(datos_train))
 
 # Análisis exploratorio de datos
 
+## Caracteristicas de las casas
+## Localización
+## Calidad
+
 Se muestra un resumen de los datos con los que se va a trabajar:
 
 ```{r}
@@ -589,6 +593,7 @@ Ahora lo vamos a imputar mediante regresión simple:
 
 datos_mice<-datos_train[,c(3:12,15,16)]
 
+#dist(datos_train[8742,18:19])
 ```
 
 ```{r}
