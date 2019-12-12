@@ -2,7 +2,7 @@
 title: "Practica Fundamentos Casas"
 author: "Natalia Alonso, Beatriz Martín y Susana Albarran"
 date: "2/12/2019"
-output: html_document
+output: bookdown::gitbook
 ---
 
 # Introducción
@@ -144,7 +144,7 @@ datatable(head(datos_train))
 ```
 
 
-## Análisis exploratorio de datos
+# Análisis exploratorio de datos
 
 Se muestra un resumen de los datos con los que se va a trabajar:
 
