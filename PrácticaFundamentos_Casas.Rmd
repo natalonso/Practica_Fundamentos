@@ -2,6 +2,7 @@
 title: "Practica Fundamentos Casas"
 author: "Natalia Alonso, Beatriz Martín y Susana Albarran"
 date: "2/12/2019"
+
 output: bookdown::gitbook
 ---
 
@@ -78,11 +79,11 @@ A continuación, se van a cargar los datos en R:
 
 ```{r lectura_datos, include=FALSE}
 
-#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de #Análisis de datos/Práctica/kc_house_data.csv")
 
-datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
@@ -248,14 +249,14 @@ Y así hasta 8 baños que es el número máximo.
 
 ```{r}
 datos_train$bathrooms <- as.numeric(datos_train$bathrooms)
-datos_train$bathrooms_categ <- cut(datos_train$bathrooms,breaks = c(-1,0.25,1,2,3,4,5,6,7,8),labels=c(0,1,2,3,4,5,6,7,8))
+datos_train$bathrooms_group <- cut(datos_train$bathrooms,breaks = c(-1,0.25,1,2,3,4,5,6,7,8),labels=c(0,1,2,3,4,5,6,7,8))
 
 
-table(datos_train$bathrooms_categ)
+table(datos_train$bathrooms_group)
 
 #Dibujamos como queda categorizada enfrentada con la variable "price" ya transformada:
-ggplot(datos_train, aes(x=as.factor(datos_train$bathrooms_categ), y=log_price, fill=as.factor(datos_train$bathrooms_categ))) + geom_boxplot()+
-labs(x="bathrooms_categ")+theme(legend.position="none")
+ggplot(datos_train, aes(x=as.factor(datos_train$bathrooms_group), y=log_price, fill=as.factor(datos_train$bathrooms_group))) + geom_boxplot()+
+labs(x="bathrooms_group")+theme(legend.position="none")
 
 ```
 
@@ -728,6 +729,12 @@ datos_train_cor <- datos_train[,3:21]
 correlation_matrix <- cor(datos_train_cor, method = "spearman")
 corrplot(correlation_matrix, method = "color", tl.srt=45, addCoef.col ="black", number.cex =0.6,
          tl.cex = 0.7,tl.col="black", type= "upper")
+
+datos_train_cor2 <- datos_train[,c(22,4,5,24,7:21)]
+correlation_matrix2 <- cor(datos_train_cor2, method = "spearman")
+corrplot(correlation_matrix2, method = "color", tl.srt=45, addCoef.col ="black", number.cex =0.6,
+         tl.cex = 0.7,tl.col="black", type= "upper")
+
 ```
 
 
@@ -737,51 +744,133 @@ corrplot(correlation_matrix, method = "color", tl.srt=45, addCoef.col ="black", 
 
 ```{r}
 
+datos_train_model <- datos_train[c(1,22,4,23,7,24,8:11,26,13,14,18:21,25,27)]
+
+datos_train_model$waterfront<-as.factor(datos_train_model$waterfront)
+datos_train_model$view<-as.factor(datos_train_model$view)
+datos_train_model$condition<-as.factor(datos_train_model$condition)
+
+datos_train_model$bathrooms_group<-as.numeric(datos_train_model$bathrooms_group)
+
+library(scales)
+
+#Ahora reescalamos un variable de la base de datos
+
+kable(rescale(datos_train_model$bedrooms))
+kable(rescale(datos_train_model$bathrooms_group))
+
+kable(rescale(datos_train_model$log_sqft_living))
+kable(rescale(datos_train_model$sqft_lot))
+kable(rescale(datos_train_model$floors))
+kable(rescale(datos_train_model$sqft_above))
+kable(rescale(datos_train_model$sqft_basement_cat))
+kable(rescale(datos_train_model$sqft_living15))
+kable(rescale(datos_train_model$sqft_lot15))
+
+
 # Vamos a crear un data_frame nuevo limpio: (????)
 
-modelo<-lm(formula = log_price ~ log_sqft_living + floors, data = datos_train)
-summary(modelo)
-# R_squared = 0.46
-
-modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_categ + grade_categ, data = datos_train)
-summary(modelo1)
-
-modelo2<-lm(formula = log_price ~ log_sqft_living + sqft_above + bathrooms + bedrooms + grade + lat, data = datos_train)
-summary(modelo2)
-# above y living tienen una correlacion de 0.84
-# bedrooms y bathrooms tienen una correlacion de 0.5 
-# R_squared = 0.7
-
-modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms + grade + lat, data = datos_train)
-summary(modelo3)
-# R_squared = 0.7
-
-modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms + grade + lat + floors, data = datos_train)
-summary(modelo3)
-# R_squared = 0.7
-
-modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms + grade + lat + floors + yr_renovated_catg, data = datos_train)
-summary(modelo3)
-# R_squared = 0.7
-
-modelo4<-lm(formula = log_price ~ log_sqft_living + bathrooms + grade, data = datos_train)
-summary(modelo4)
-# R_squared = 0.55
-
-modelo5<-lm(formula = log_price ~ log_sqft_living + bathrooms, data = datos_train)
-summary(modelo5)
-# R_squared = 0.46
-
-modelo6<-lm(formula = log_price ~ log_sqft_living, data = datos_train)
+modelo6<-lm(formula = log_price ~ log_sqft_living, data = datos_train_model)
 summary(modelo6)
 # R_squared = 0.46
 
+modelo5<-lm(formula = log_price ~ log_sqft_living + bathrooms_group, data = datos_train_model)
+summary(modelo5)
+# R_squared = 0.46
 
-vif(modelo2) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
+modelo4<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ, data = datos_train_model)
+summary(modelo4)
+# R_squared = 0.5
 
+modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + yr_renovated_catg, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.67
+
+modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + yr_built, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.68
+
+modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.68
+
+modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront + view, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.70
+
+modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + view, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.7
+
+vif(modelo3) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
 
 # usamos una seleccion automatica de variables para comparar la evaluacion del modelo
+regfit_full <- leaps::regsubsets(log_price~., datos_train_model[c(2:5,7,10:13,16:21)]) #Best subset
+reg_sum
+reg_sum <- summary(regfit_full)
+coef(regfit_full, 6)
 
+
+
+# modelo con las caracteristicas de la seleccion automatica Best subset
+modelo3<-lm(formula = log_price ~ floors + waterfront+ yr_built + lat + log_sqft_living + grade_categ, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.7
+
+
+
+# modelo regularización lasso
+x <- model.matrix(log_price~., datos_train_model[c(2:5,7,10:13,16:21)])
+x
+
+y <- datos_train_model$log_price
+y
+
+library(glmnet)
+
+set.seed(1234)
+cv_result <- cv.glmnet(x,y,alpha=1)
+cv_result
+
+plot(cv_result)
+
+best_lam <- cv_result$lambda.min
+best_lam
+
+out <- glmnet(x,y,alpha=1,lambda = best_lam)
+out
+
+lasso_coef <- predict(out,type="coefficients",s=best_lam)[1:20,]
+lasso_coef[lasso_coef!=0]
+lasso_coef
+
+
+first_six <- max(which(cv_result$nzero == 6))
+first_six
+
+my_lam <- cv_result$lambda[first_six]
+my_lam
+
+out_six <- glmnet(x,y,alpha=1,lambda = first_six)
+out_six
+
+lasso_coef_six <- predict(out_six,type="coefficients")[1:20,]
+lasso_coef_six
+
+lasso_coef_six[lasso_coef_six!=0]
+lasso_coef_six
+
+
+
+
+
+```
+```{r}
+
+# TRANSFORMAR LOS DATOS DE TEST CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
+
+
+predict(modelo3, newdata = datos_test)
 
 ```
 
