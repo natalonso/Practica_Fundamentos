@@ -79,9 +79,10 @@ A continuación, se van a cargar los datos en R:
 
 ```{r lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
-#datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de #Análisis de datos/Práctica/kc_house_data.csv")
+datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
+
 
 #datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
@@ -106,6 +107,7 @@ library(DT)
 library(gridExtra)
 library(jpeg)
 library(car)
+library(leaflet)
 ```
 
 # Train, test y validación
@@ -586,16 +588,24 @@ table(datos_train$zipcode)
 A lo mejor se puede dibujar una gráfica dependiendo de la zona geográfica y el precio de las casas.
 
 ```{r}
-datos_train %>%
-{
-  ggplot(.,aes(x=long,y=lat, size= price, color=zipcode)) + 
-    geom_point(alpha=0.3) + 
-    guides(color='none') +
-    coord_fixed(1.3) + 
-    scale_size(labels = scales::dollar,breaks = signif(10^seq(5,9,0.5),2)) 
-    
-} %>%
-  print()
+#datos_train$Pricegroup<-cut(datos_train$price, c(-1,250e3,500e3,750e3,1e6,2e6,999e6))
+datos_train$Pricegroup<-cut(datos_train$price, c(0,250000,500000,750000,1000000,2000000,10000000))
+
+center_lon = median(datos_train$long,na.rm = TRUE)
+center_lat = median(datos_train$lat,na.rm = TRUE)
+
+factpal <- colorFactor(c("black","blue","yellow","orange","pink","red"), 
+                       datos_train$Pricegroup )
+
+leaflet(datos_train) %>% addProviderTiles("Esri.NatGeoWorldMap") %>%
+  addCircles(lng = ~long, lat = ~lat,
+             color = ~factpal(Pricegroup))  %>%
+  # controls
+  setView(lng=center_lon, lat=center_lat,zoom = 12) %>%
+
+  addLegend("bottomright", pal = factpal , values = ~Pricegroup,
+            title = "Precio de las casas por localización",
+            opacity = 1)
 ```
 
 
@@ -617,39 +627,60 @@ sum(is.na(datos_train))
 
 ```
 
-En el caso de la variable **Bedrooms** hemos visto que hay 13 casas con 0 habitaciones y una con 33. Como en nuestro estudio no tenemos datos faltantes lo que vamos a hacer a continuación es suponer que la casa con 33 habitaciones es un NA.
+En el caso de la variable **Bedrooms** hemos visto que hay 13 casas con 0 habitaciones y una con 33. Como en nuestro estudio no tenemos datos faltantes, lo que vamos a hacer a continuación es suponer que la casa con 33 habitaciones es un NA.
+
+Primero nos vamos a crear un dataframe auxiliar para probar diferentes métodos y poder tomar una decisión.
 
 ```{r}
+datos_train$posicion<-c(1:nrow(datos_train))
 
-datos_train$bedrooms[datos_train$bedrooms==33] <-NA
-#sum(is.na(datos_train))
+indice_hab33 <- datos_train[datos_train$bedrooms==33,]$posicion
+indice_hab33
 
+datos_train_aux1 <- datos_train
+
+datos_train_aux1$bedrooms[datos_train_aux1$bedrooms==33] <-NA
+#sum(is.na(datos_train_aux))
+
+datos_train_aux2 <- datos_train
+
+datos_train_aux2$bedrooms[datos_train_aux2$bedrooms==33] <-NA
+
+datos_train_aux3 <- datos_train
+
+datos_train_aux3$bedrooms[datos_train_aux3$bedrooms==33] <-NA
 ```
+
 Ahora lo vamos a imputar mediante regresión simple:
 
 ```{r}
 
-datos_mice<-datos_train[,c(3:12,15,16)]
+datos_mice<-datos_train_aux1[,c(3:12,15,16)]
 
 #dist(datos_train[8742,18:19])
-```
 
-```{r}
 # Imputación simple, regresión ordinaria:
 
 imp_1 = mice(datos_mice, method = "norm.predict", m=1) # Cálculo método de imputación
-datostrain_mice = complete(imp_1)  # Imputación de valores sustiyuye 33 por 3.19 habitaciones
 
-datos_train$bedrooms[8742]<-floor(datostrain_mice$bedrooms[8742])
+datostrain_mice = complete(imp_1)  # Imputación de valores
 
-#datostrain_mice$postion<-row.names(datostrain_mice)
+datostrain_mice$posicion<-c(1:nrow(datostrain_mice))
+
+#Ha imputado:
+datostrain_mice[datostrain_mice$posicion == indice_hab33,]$bedrooms
+
+#floor(datostrain_mice[datostrain_mice$posicion == indice_hab33,]$bedrooms)
+
 ```
-Ha imputado con el valor 3.19, es decir 3 habitaciones.
+
+Ha imputado con el valor 3.208425. Como las habitaciones toman valores discretos, nos quedamos con 3 habitaciones.
 
 
 ```{r}
+# SI QUEREMOS EJECUTAR ESTO HAY QUE HACER EL FLOOR() DE ARRIBA PARA QUE NO SALGA DECIMAL LA HABITACION
 #sólo hago los gráficos para ver el valor que ha imputado
-ggplot(datostrain_mice, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
+# ggplot(datostrain_mice, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
 # Para imputar los datos faltantes o erróneos ver qué técnica usar:
 # datos$bedrooms[datos$bedrooms==0] = mean(datos$bedrooms)
 # datos$bedrooms[datos$bedrooms==33] = mean(datos$bedrooms)
@@ -657,41 +688,57 @@ ggplot(datostrain_mice, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + ge
 
 ```
 ```{r}
-
-datos_mice2<-datos_train[,c(3:12,15,16)]
+datos_mice2<-datos_train_aux2[,c(3:12,15,16)]
 ```
 
 ```{r}
 # Imputación multiple, regresión estocástica:
 
 imp_2 = mice(datos_mice2, method = "norm.nob", seed=1234)# Cálculo método de imputación
-datostrain_mice2 = complete(imp_2)  # Imputación de valores sustiyuye 33 por 3.33 habitaciones
-datostrain_mice2$bedrooms[8742]
-#datostrain_mice$postion<-row.names(datostrain_mice)
+
+datostrain_mice2 = complete(imp_2)  # Imputación de valores sustiyuye 33
+
+datostrain_mice2$posicion<-c(1:nrow(datostrain_mice2))
+
+#Ha imputado:
+datostrain_mice2[datostrain_mice2$posicion == indice_hab33,]$bedrooms
 
 ```
+
+En este caso el valor que toma es 3.211892, por lo que coincide con el anterior en que son 3 habitaciones lo que tenemos que imputar.
+
 ```{r}
 
 #sólo hago los gráficos para ver el valor que ha imputado 
-
-ggplot(datostrain_mice2, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
+# 
+# ggplot(datostrain_mice2, aes(x=as.factor(bedrooms), y=price, fill=bedrooms)) + geom_boxplot() + guides(fill=FALSE)
 
 ```
 
 
-Otro modo de imputar el dato faltante es ver por distancia euclídea las casas más cercanas sus característica:
+Otro modo de imputar el dato faltante es compararlo con los vecinos más cercanos.Para ello lo que hemos ehcho es calcular la diferencia entre la latitud de la casa con 33 habitaciones con el resto y lo mismo para la longitud. Luego hemos sumado esas diferenecias y nos hemos quedado con las 15 distancias más pequeñas.
 
 ```{r}
-#datos_train$diferencia_lat<- abs(datos_train$lat[datos_train$bedrooms==33]-datos_train[,18])
-#datos_train$diferencia_long<- abs(datos_train$long[datos_train$bedrooms==33]-datos_train[,19])
-#datos_train$diferencia_total <- datos_train$diferencia_lat+datos_train$diferencia_long
-#casas_mas_cercanas <- sort(datos_train$diferencia_total,index.return=TRUE)
-#indices <- casas_mas_cercanas$ix[2:15]
-#mean(datos_train$bedrooms[indices])
+datos_train_aux3$diferencia_lat<- abs(datos_train$lat[datos_train$bedrooms==33]-datos_train[,18])
+
+datos_train_aux3$diferencia_long<- abs(datos_train$long[datos_train$bedrooms==33]-datos_train[,19])
+
+datos_train_aux3$diferencia_total <- datos_train_aux3$diferencia_lat+datos_train_aux3$diferencia_long
+
+casas_mas_cercanas <- as.data.frame(sort(datos_train_aux3$diferencia_total,index.return=TRUE))
+indices_casas_cercanas <- casas_mas_cercanas$ix[2:16] # la primera no se coge porque es la propia casa con 33 habitaciones
+
+mean(datos_train_aux3$bedrooms[indices_casas_cercanas])
 
 ```
 
+El resultado que obtenemos en este caso es 3.333333. Al igual que en los métodos anteriores, la imputación sería de 3 habitaciones.
 
+Por lo que finalmente imputamos que esa casa tiene 3 habitaciones.
+
+```{r}
+datos_train[datos_train$posicion == indice_hab33,]$bedrooms = 3
+```
 
 
 Con el Boxplot observamos lo siguiente:  
@@ -722,7 +769,6 @@ ggplot(datos_train, aes(x=as.factor(floors), y=log_price, fill=floors)) + geom_b
 # Selección de variable
 
 Para hacer una selección de variables ya hemos estudiado como se comportan con la variable precio. A continuación se va a realizar una matriz de correlaciones para terminar de decidir con qué variables nos quedamos:
-
 
 ```{r}
 datos_train_cor <- datos_train[,3:21]
