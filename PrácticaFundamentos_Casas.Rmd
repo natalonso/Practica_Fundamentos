@@ -911,6 +911,9 @@ lasso_coef_six
 
 
 ```
+
+# Test
+
 ```{r}
 
 # TRANSFORMAR LOS DATOS DE TEST CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
