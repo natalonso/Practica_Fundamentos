@@ -81,9 +81,9 @@ A continuación, se van a cargar los datos en R:
 
 ```{r lectura_datos, include=FALSE}
 
-#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
-datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
 #datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
@@ -110,6 +110,7 @@ library(gridExtra)
 library(jpeg)
 library(car)
 library(leaflet)
+library(scales)
 ```
 
 # Train, test y validación
@@ -599,7 +600,11 @@ sum(is.na(datos_train))
 
 ```
 
-En el caso de la variable **Bedrooms** hemos visto que hay 13 casas con 0 habitaciones y una con 33. Como en nuestro estudio no tenemos datos faltantes, lo que vamos a hacer a continuación es suponer que la casa con 33 habitaciones es un NA.
+En el caso de la variable **Bedrooms** hemos visto que hay 13 casas con 0 habitaciones y una con 33. Como en nuestro estudio no tenemos datos faltantes. Hemos comprobado con la latitud y la longitud (véase la Figura 1), que la casa con 33 habitaciones es un dato erróneo, ya que su estructura es muy parecida a las casas de los alrededores y no tienen 33 habitaciones. Lo que vamos a hacer a continuación es suponer que la casa con 33 habitaciones es un NA y estudiar cómo imputar ese dato faltante.
+
+
+![Figura 1](Casa con 33 habitaciones_v2.jpg){width=90%}
+
 
 Primero nos vamos a crear un dataframe auxiliar para probar diferentes métodos y poder tomar una decisión.
 
@@ -772,21 +777,36 @@ datos_train_model$bathrooms_group<-as.numeric(datos_train_model$bathrooms_group)
 ```
 
 ```{r}
-library(scales)
 
 #Ahora reescalamos un variable de la base de datos
-# 
-# kable(rescale(datos_train_model$bedrooms))
-# kable(rescale(datos_train_model$bathrooms_group))
-# 
-# kable(rescale(datos_train_model$log_sqft_living))
-# kable(rescale(datos_train_model$sqft_lot))
-# kable(rescale(datos_train_model$floors))
-# kable(rescale(datos_train_model$sqft_above))
-# kable(rescale(datos_train_model$sqft_basement_cat))
-# kable(rescale(datos_train_model$sqft_living15))
-# kable(rescale(datos_train_model$sqft_lot15))
 
+#Sin reescalar para comprobar los efectos de los 3 tipos de reescalados:
+ggplot(datos_train_model, aes(x=log_price)) + geom_density(alpha=.3, fill="#E1AF00")
+#FORMA1: F-score scaling: resta la media y divide por la desviación tipica
+ggplot(datos_train_model, aes(x=scale(datos_train_model$log_price, center = TRUE, scale = TRUE) )) + geom_density(alpha=.3, fill="#E1AF00")
+#FORMA2: 0-1 scaling: (V - min V)/(max V - min V)
+ggplot(datos_train_model, aes(x=rescale(datos_train_model$log_price))) + geom_density(alpha=.3, fill="#E1AF00")
+#FORMA3: Scaling to unit length based on the euclidean length
+ggplot(datos_train_model, aes(x=datos_train_model$log_price/sqrt(sum(datos_train_model$bedrooms^2)))) + geom_density(alpha=.3, fill="#E1AF00")
+
+#Una vez decidamos el reescalado, reescalar todo, en caso de elegir la forma2:
+datos_train_model$bedrooms<-rescale(datos_train_model$bedrooms)
+datos_train_model$log_price<-rescale(datos_train_model$log_price)
+datos_train_model$bathrooms_group<-rescale(datos_train_model$bathrooms_group)
+datos_train_model$log_sqft_living<-rescale(datos_train_model$log_sqft_living)
+datos_train_model$floors<-rescale(datos_train_model$floors)
+datos_train_model$sqft_above<-rescale(datos_train_model$sqft_above)
+datos_train_model$sqft_basement<-rescale(datos_train_model$sqft_basement)
+datos_train_model$lat<-rescale(datos_train_model$lat)
+datos_train_model$long<-rescale(datos_train_model$long)
+datos_train_model$sqft_living15<-rescale(datos_train_model$sqft_living15)
+datos_train_model$sqft_lot15<-rescale(datos_train_model$sqft_lot15)
+
+```
+
+
+
+```{r}
 
 # Vamos a crear un data_frame nuevo limpio: (????)
 
