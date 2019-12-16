@@ -80,12 +80,12 @@ A continuación se van a describir las variables:
 
 ```{r lectura_datos, include=FALSE}
 
-#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
-datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
@@ -506,6 +506,7 @@ grid.arrange(p16,p17, nrow=1)
 
 ```{r}
 table(datos_train$yr_built)
+yr_built<-as.factor(datos_train$yr_built)
 ```
 
 Los años de construcción van desde el 1900 hasta el 2015.
@@ -721,66 +722,31 @@ corrplot(correlation_matrix2, method = "color", tl.srt=45, addCoef.col ="black",
 
 ```{r}
 # Creamos un nuevo dataframe limpio, con las variables ya transformadas y categorizadas
-datos_train_model <- datos_train[c(1,21,3,22,23,6,7:10,25,12,24,17:20,26,14)]
-```
-
-## Reescalado?
-
-
-```{r}
-#Ahora reescalamos un variable de la base de datos
-
-#Sin reescalar para comprobar los efectos de los 3 tipos de reescalados:
-ggplot(datos_train_model, aes(x=log_price)) + geom_density(alpha=.3, fill="#E1AF00")
-
-#FORMA1: F-score scaling: resta la media y divide por la desviación tipica
-ggplot(datos_train_model, aes(x=scale(datos_train_model$log_price, center = TRUE, scale = TRUE) )) + geom_density(alpha=.3, fill="#E1AF00")
-
-#FORMA2: 0-1 scaling: (V - min V)/(max V - min V)
-ggplot(datos_train_model, aes(x=rescale(datos_train_model$log_price))) + geom_density(alpha=.3, fill="#E1AF00")
-
-#FORMA3: Scaling to unit length based on the euclidean length
-ggplot(datos_train_model, aes(x=datos_train_model$log_price/sqrt(sum(datos_train_model$bedrooms^2)))) + geom_density(alpha=.3, fill="#E1AF00")
-
-#Una vez decidamos el reescalado, reescalar todo, en caso de elegir la forma2:
-datos_train_model$bedrooms<-rescale(datos_train_model$bedrooms)
-datos_train_model$log_price<-rescale(datos_train_model$log_price)
-datos_train_model$bathrooms_group<-rescale(datos_train_model$bathrooms_group)
-datos_train_model$log_sqft_living<-rescale(datos_train_model$log_sqft_living)
-datos_train_model$floors<-rescale(datos_train_model$floors)
-datos_train_model$sqft_above<-rescale(datos_train_model$sqft_above)
-datos_train_model$lat<-rescale(datos_train_model$lat)
-datos_train_model$long<-rescale(datos_train_model$long)
-datos_train_model$sqft_living15<-rescale(datos_train_model$sqft_living15)
-datos_train_model$sqft_lot15<-rescale(datos_train_model$sqft_lot15)
-
+datos_train_model <- datos_train[c(1,21,3,22,23,6,7:10,25,12,24,17:20,26)]
 ```
 
 ## Creación del modelo manual
 
 ```{r}
 
-# Vamos a crear un data_frame nuevo limpio: (????)
+modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat, data = datos_train_model)
+summary(modelo1)
+# R_squared = 0.669, 4 variables
 
-#modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + yr_renovated_catg, data = datos_train_model)
-#summary(modelo1)
-# R_squared = 0.67
+modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
+summary(modelo2) #-----> ELEGIDO!!
+# R_squared = 0.68, 5 variables
 
-#modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + #yr_built, data = datos_train_model)
-#summary(modelo2)
-# R_squared = 0.68
+modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + view, data = datos_train_model)
+summary(modelo3)
+# R_squared = 0.698, 5 variables
 
-#modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
-#summary(modelo3)
-# R_squared = 0.68
 
-#modelo4<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront + view, data = datos_train_model)
-#summary(modelo4)
-# R_squared = 0.7
-
-modelo5<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + view + yr_built + sqft_living15, data = datos_train_model)
-summary(modelo5)
-# R_squared = 0.7
+# waterfront y view, teniendo el resto de variables iguales afecta 0.01
+# bedrooms y bathrooms_group, teniendo el resto de variables iguales afecta 0.01
+# yr_renovated_catg no suma al r2ajustado
+# log_sqft_living y sqft_living15, teniendo el resto de variables iguales afecta 0.01
+# long no aporta
 
 ```
 
@@ -799,7 +765,7 @@ A continuación vamos a usar el **Factor de Inflación de la Varianza (VIF)**, p
 El termino tolerancia es 1/VIF por lo que los límites recomendables están entre 1 y 0.1.
 
 ```{r}
-vif(modelo5) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
+vif(modelo2) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
 ```
 
 En el modelo seleccionado vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena.
@@ -809,8 +775,8 @@ En el modelo seleccionado vemos que no hay índices altos de colinealidad por lo
 Los residuos se deben distribuir de forma normal con media cero. Para comprobarlo vamos a realizar un QQ-plot
 ```{r}
 
-qqnorm(modelo5$residuals)
-qqline(modelo5$residuals)
+qqnorm(modelo2$residuals)
+qqline(modelo2$residuals,col="red")
 
 ```
 
@@ -822,19 +788,34 @@ El proceso de Best Subset consiste en evaluar todos los posibles modelos que se 
 
 ```{r}
 
-# usamos una seleccion automatica de variables para comparar la evaluacion del modelo
-mejor_modelo <- leaps::regsubsets(log_price~., datos_train_model[,-1]) #Best subset
-#regfit_full
-reg_sum <- summary(mejor_modelo)
-#reg_sum
+#usamos una seleccion automatica de variables para comparar la evaluacion del modelo
+#por defecto el número de sbconjuntos evaluados está limitado a ocho
 
-coef(mejor_modelo, 6)
+mejor_modelo_forward <- leaps::regsubsets(log_price~., datos_train_model[,-1], method="forward") #Best subset forward
+mejor_modelo_forward
+
+reg_sum_forward <- summary(mejor_modelo_forward)
+reg_sum_forward
+
+reg_sum_forward$adjr2
+coef(mejor_modelo_forward,5) 
+
+#la función regsubsets con el método forward por defecto evalua 8 subconjuntos diferentes, en función del número de variables que quieras que tenga tu modelo, puedes hacer coef(modelo,n_variables_modelo)
+
+mejor_modelo_backward <- leaps::regsubsets(log_price~., datos_train_model[,-1], method="backward") #Best subset backward
+mejor_modelo_backward
+
+reg_sum_backward <- summary(mejor_modelo_backward)
+reg_sum_backward
+
+reg_sum_backward$adjr2
+coef(mejor_modelo_backward,5)
+
 ```
 
 # Test
 
 ```{r}
-
 # TRANSFORMAR LOS DATOS DE TEST CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
 
 #id
@@ -869,29 +850,96 @@ datos_test$sqft_basement_cat <- cut(datos_test$sqft_basement,breaks = c(-1,0,600
 datos_test$yr_renovated_catg <-cut(datos_test$yr_renovated, breaks=c(-0.5,1933, 2015), labels= c("0","1"))
 
 #datos de test solo con las variables transformadas y sin la variable respuesta
-datos_tes_mod <- datos_test[c(1,2,22,4,23,24,7:11,25,13,26,15,27,17:21)]
+datos_test_mod <- datos_test[c(1,2,22,4,23,24,7:11,25,13,26,15,27,17:21)]
 ```
 
 ```{r}
 #el modelo elegido de momento (porque estaba puesto), es el último
 #eliminamos la variable respuesta para predecir
-predict_precio <- as.data.frame(predict(modelo3, newdata = datos_tes_mod[-3,]))
-
-colnames(predict_precio)[1] <- "precio_pred"
+predict_precio_test <- as.data.frame(predict(modelo2, newdata = datos_test_mod[-3,]))
+colnames(predict_precio_test)[1] <- "predict_precio_test"
 ```
 
 ## Variable respuesta test vs valor predicho
 
 ```{r}
-datos_tes_mod$id_aux <- rownames(datos_tes_mod)
-predict_precio$id_aux <- rownames(predict_precio)
+datos_test_mod$id_aux <- rownames(datos_test_mod)
+predict_precio_test$id_aux <- rownames(predict_precio_test)
 
-comparacion <- merge(datos_tes_mod,predict_precio,by="id_aux")
-
+comparacion <- merge(datos_test_mod,predict_precio_test,by="id_aux")
 comparacion <- comparacion[,c(1,4,23)]
 ```
 
 ```{r}
-comparacion$dif_precios <- comparacion$log_price - comparacion$precio_pred
+comparacion$predict_precio_test <- comparacion$log_price - comparacion$predict_precio_test
+mean(comparacion$predict_precio_test)
+```
+
+
+
+
+# Validación
+
+```{r}
+# TRANSFORMAR LOS DATOS DE VALIDACIÓN CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
+
+#id
+datos_validacion$id <- as.factor(datos_validacion$id)
+
+#price
+datos_validacion$log_price <- log10(datos_validacion$price)
+
+#bathrooms
+datos_validacion$bathrooms_group <- cut(datos_validacion$bathrooms,breaks = c(-1,0.25,1,2,3,4,5,6,7,8),labels=c(0,1,2,3,4,5,6,7,8))
+datos_validacion$bathrooms_group <- as.numeric(datos_validacion$bathrooms_group)
+
+#sqft_living
+datos_validacion$log_sqft_living<- log10(datos_validacion$sqft_living)
+
+#waterfront
+datos_validacion$waterfront <- as.factor(datos_validacion$waterfront)
+
+#view
+datos_validacion$view <- as.factor(datos_validacion$view)
+
+#condition
+datos_validacion$condition <- as.factor(datos_validacion$condition)
+
+#grade
+datos_validacion$grade_categ <- cut(datos_validacion$grade, breaks = c(0,4,9,13), labels = c(0,1,2))
+
+#sqft_basement
+datos_validacion$sqft_basement_cat <- cut(datos_validacion$sqft_basement,breaks = c(-1,0,6000),labels=c(0,1))
+
+#yr_renovated
+datos_validacion$yr_renovated_catg <-cut(datos_validacion$yr_renovated, breaks=c(-0.5,1933, 2015), labels= c("0","1"))
+
+#datos de validacion solo con las variables transformadas y sin la variable respuesta
+datos_validacion_mod <- datos_validacion[c(1,2,22,4,23,24,7:11,25,13,26,15,27,17:21)]
+```
+
+```{r}
+#el modelo elegido de momento (porque estaba puesto), es el último
+#eliminamos la variable respuesta para predecir
+predict_precio_validacion <- as.data.frame(predict(modelo2, newdata = datos_validacion_mod[-3,]))
+
+colnames(predict_precio_validacion)[1] <- "precio_pred"
+```
+
+## Variable respuesta validacion vs valor predicho
+
+```{r}
+datos_validacion_mod$id_aux <- rownames(datos_validacion_mod)
+predict_precio_validacion$id_aux <- rownames(predict_precio_validacion)
+
+comparacion <- merge(datos_validacion_mod,predict_precio_validacion,by="id_aux")
+comparacion <- comparacion[,c(1,4,23)]
+```
+
+```{r}
+comparacion$dif_precios <- comparacion$log_price - comparacion$precio_pred 
 mean(comparacion$dif_precios)
 ```
+
+
+Como el resultado es negativo, el precio predicho es mayor que el real, el modelo tiene un pequeño error al alza, el precio predicho de media, es superior al real.
