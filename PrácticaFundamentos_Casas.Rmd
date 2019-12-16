@@ -77,16 +77,15 @@ A continuación se van a describir las variables:
 
  **21.- sqft_lot15**: pies cuadrados del terreno de las 15 casas más cercanas.
 
-A continuación, se van a cargar los datos en R: 
 
 ```{r lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
-#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
@@ -111,6 +110,7 @@ library(jpeg)
 library(car)
 library(leaflet)
 library(scales)
+library(cowplot)
 ```
 
 # Train, test y validación
@@ -268,7 +268,7 @@ labs(x="bathrooms_group")+theme(legend.position="none")
 
 ```
 
-Se puede observar cómo crece el precio de las casas a media que aumenta el número de baños por casa.
+Se puede observar cómo crece el precio de las casas a medida que aumenta el número de baños por casa.
 
 **-Variable sqft_living**: es numérica. Se va a pintar un histograma y la densidad para ver su comportamiento. 
 
@@ -368,7 +368,7 @@ ggplot(datos_train, aes(x=log_price, fill= as.factor(sqft_basement_cat))) + geom
 
 ```
 
-Se puede obervar que más o menos ambas categorías siguen la misma distrución.
+Se puede obervar que ambas categorías prácticamente siguen la misma distrución pero las casas que tienen sótano pueden llegar a ser más caras.
 
 **- Variable sqft_living15 **: es numérica.
 
@@ -546,12 +546,18 @@ Se comportan de una manera similar respecto al precio.
 
 ## Localización
 
+En este aparatado vamos a realizar un ggpairs para ver como se comportan las variables de localización respecto al precio.
+
 ```{r}
-ggpairs(datos_train,columns=c(2,16:18),mapping = aes(color = "red") )
+ggpairs(datos_train,columns=c(21,16:18),mapping = aes(color = "red") )
 
 ```
-
-**TENEMOS QUE COMENTAR ESTE GRAFICO**
+ 
+ Se observa lo siguiente:
+ 
+   -  En el caso de **zipcode** podríamos agruparlo por códigos postales, aunque si observamos la correlación con el precio no es indiquitava, ya que tiene un valor negativo próximo a cero.
+   -  **lat**, **long**, a lo mejor se podría agrupar por tres tipos de latitud y longitud distintas.
+ 
 
 **- Variable zipcode **: es categórica.  
 
@@ -622,7 +628,9 @@ datos_train_aux3 <- datos_train
 datos_train_aux3$bedrooms[datos_train_aux3$bedrooms==33] <-NA
 ```
 
-Ahora lo vamos a imputar mediante regresión simple:
+## Imputación con regresión simple
+
+A continuación vamos a realizar la imputación de dato faltante con regresión simple:
 
 ```{r}
 #datos_mice<-datos_train_aux1[,c(3:12,15,16)]
@@ -641,6 +649,8 @@ datostrain_mice[datostrain_mice$posicion == indice_hab33,]$bedrooms
 
 Ha imputado con el valor 3.118659. Como las habitaciones toman valores discretos, nos quedamos con 3 habitaciones.
 
+## Imputación con regresión estocástica
+
 ```{r}
 datos_mice2<-datos_train_aux2[,c(21,3,22,23,6,7,12,17,18)]
 
@@ -655,6 +665,8 @@ datostrain_mice2[datostrain_mice2$posicion == indice_hab33,]$bedrooms
 ```
 
 En este caso el valor que toma es 3.122092, por lo que coincide con el anterior en que son 3 habitaciones lo que tenemos que imputar.
+
+## Imputación comparando los vecinos más cercanos
 
 Otro modo de imputar el dato faltante es compararlo con los vecinos más cercanos.Para ello, lo que hemos hecho es calcular la diferencia entre la latitud de la casa con 33 habitaciones con el resto y lo mismo para la longitud. Luego hemos sumado esas diferenecias y nos hemos quedado con las 15 distancias más pequeñas.
 
@@ -677,7 +689,9 @@ Por lo que finalmente imputamos que esa casa tiene 3 habitaciones.
 datos_train[datos_train$posicion == indice_hab33,]$bedrooms = 3
 ```
 
+## Eliminación de Outliers
 
+Como hemos comentado anteriormente, teníamos 7 observaciones con 0 baños y otras 7 con 0 casas, se ha decidido eliminar estas filas de la base de datos, ya que respecto al número de observaciones totales de los datos de entrenamiento es muy poco representativo y no va a afectar al resultado.
 
 ```{r}
 indices_cero_habitaciones<-datos_train$posicion[datos_train$bedrooms==0]
@@ -702,7 +716,6 @@ corrplot(correlation_matrix2, method = "color", tl.srt=45, addCoef.col ="black",
 ```
 
 
-
 # Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
 
 
@@ -710,6 +723,9 @@ corrplot(correlation_matrix2, method = "color", tl.srt=45, addCoef.col ="black",
 # Creamos un nuevo dataframe limpio, con las variables ya transformadas y categorizadas
 datos_train_model <- datos_train[c(1,21,3,22,23,6,7:10,25,12,24,17:20,26,14)]
 ```
+
+## Reescalado?
+
 
 ```{r}
 #Ahora reescalamos un variable de la base de datos
@@ -740,42 +756,79 @@ datos_train_model$sqft_lot15<-rescale(datos_train_model$sqft_lot15)
 
 ```
 
-
+## Creación del modelo manual
 
 ```{r}
 
 # Vamos a crear un data_frame nuevo limpio: (????)
 
-modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + yr_renovated_catg, data = datos_train_model)
-summary(modelo1)
+#modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + yr_renovated_catg, data = datos_train_model)
+#summary(modelo1)
 # R_squared = 0.67
 
-modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + yr_built, data = datos_train_model)
-summary(modelo2)
+#modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + #yr_built, data = datos_train_model)
+#summary(modelo2)
 # R_squared = 0.68
 
-modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
-summary(modelo3)
+#modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
+#summary(modelo3)
 # R_squared = 0.68
 
-modelo4<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront + view, data = datos_train_model)
-summary(modelo4)
+#modelo4<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront + view, data = datos_train_model)
+#summary(modelo4)
 # R_squared = 0.7
 
-modelo5<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + view, data = datos_train_model)
+modelo5<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + floors + view + yr_built + sqft_living15, data = datos_train_model)
 summary(modelo5)
 # R_squared = 0.7
 
-vif(modelo3) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
+```
+
+Para crear el modelo manual, hemos ido introduciendo variables para ver como se ajustaba el coeficiente de determinación.
+
+El modelo es capaz de explicar el 70% de la variabilidad observada en el precio de las casas (R-squared: 0.7003 ). El valor de R2-ajustado es muy  cercano al R2 (Adjusted R-squared: 0.7001 ) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1.(Se podría volver a categorizar esta variable)
+
+### Estudio de colinealidad (VIF)
+
+A continuación vamos a usar el **Factor de Inflación de la Varianza (VIF)**, para ver si existe colinealidad emtre las variables seleccionadas para el modelo. Los límites de referencia que se suelen emplear son:
+
+ - VIF = 1: Ausencia total de colinialidad
+ - 1 < VIF < 5: La regresión puede verse afectada por cierta colinialidad.
+ - 5  < VIF < 10: Causa de preocupación
+ 
+El termino tolerancia es 1/VIF por lo que los límites recomendables están entre 1 y 0.1.
+
+```{r}
+vif(modelo5) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
+```
+
+En el modelo seleccionado vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena.
+
+### Distribución normal de los residuos
+
+Los residuos se deben distribuir de forma normal con media cero. Para comprobarlo vamos a realizar un QQ-plot
+```{r}
+
+qqnorm(modelo5$residuals)
+qqline(modelo5$residuals)
+
+```
+
+ Se confirma que los residuos sí se distribuyen de forma normal.
+
+## Creación del modelo por selección automática (Best subset)
+
+El proceso de Best Subset consiste en evaluar todos los posibles modelos que se pueden crear por combinación de los predictores disponibles.
+
+```{r}
 
 # usamos una seleccion automatica de variables para comparar la evaluacion del modelo
-regfit_full <- leaps::regsubsets(log_price~., datos_train_model[,-1]) #Best subset
-regfit_full
-reg_sum <- summary(regfit_full)
-reg_sum
+mejor_modelo <- leaps::regsubsets(log_price~., datos_train_model[,-1]) #Best subset
+#regfit_full
+reg_sum <- summary(mejor_modelo)
+#reg_sum
 
-coef(regfit_full, 6)
-
+coef(mejor_modelo, 6)
 ```
 
 # Test
