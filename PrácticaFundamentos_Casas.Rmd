@@ -80,12 +80,12 @@ A continuación se van a describir las variables:
 
 ```{r lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
-#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r setup, include=FALSE}
@@ -188,7 +188,7 @@ A continuación, se va a realizar un análisis exploratorio para ver cómo se co
 
 options(scipen=999)
 options(repr.plot.width=6, repr.plot.height=3,align="center")
-ggplot(datos_train, aes(x=price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
+ggplot(datos_train, aes(x= price)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
 
 ```
 
@@ -523,6 +523,7 @@ Se observa que a medida que iba pasando el tiempo, por regla general, se han ido
 
 ```{r}
 table(datos_train$yr_renovated)
+
 ```
 
 Se observa que hay un año "0" y entendemos que son casas que no han tenido ningún tipo de renovación. La vamos a categorizar como:
@@ -534,6 +535,7 @@ Se observa que hay un año "0" y entendemos que son casas que no han tenido ning
 datos_train$yr_renovated_catg <-cut(datos_train$yr_renovated, breaks=c(-0.5,1933, 2015), labels= c("0","1"))
 
 table(datos_train$yr_renovated_catg)
+
 ```
 
 La mayoría de casas no han tenido ninguna renovación.
@@ -541,6 +543,7 @@ La mayoría de casas no han tenido ninguna renovación.
 ```{r}
 #Dibujamos cómo queda categorizada enfrentada con la variable "log_price"
 ggplot(datos_train, aes(x=as.factor(datos_train$yr_renovated_catg), y=log_price, fill=as.factor(datos_train$yr_renovated_catg))) + geom_boxplot() + labs(x="0-No renovación / 1-Renovación")+theme(legend.position="none")
+
 ```
 
 Se comportan de una manera similar respecto al precio.
@@ -734,16 +737,34 @@ datos_train_model <- datos_train[c(1,21,3,22,23,6,7:10,25,12,24,17:20,26)]
 
 ## Creación del modelo manual
 
+Para crear el modelo manual, hemos ido introduciendo variables para ver como se ajustaba el coeficiente de determinación.
+
+Para este apartado nos hemos basado en la matriz de correlaciones del apartado anterior y en los gráficos del análisis exploratorio.
+
+  -**Modelo1**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ.
+  El **Modelo1** es capaz de explicar casi el 67%  de la variabilidad observada en el precio de las casas (R-squared: 0.6699 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6697 ) lo que indica que el modelo contiene predictores útiles.
+
 ```{r}
 
 modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat, data = datos_train_model)
 summary(modelo1)
 # R_squared = 0.669, 4 variables
+```
+ 
+  -**Modelo2**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y waterfront.
+   El **Modelo2** es capaz de explicar casi el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828 ) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1.(Se podría volver a categorizar esta variable)
+  
 
+```{r}
 modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
 summary(modelo2) #-----> ELEGIDO!!
 # R_squared = 0.68, 5 variables
+```
 
+  -**Modelo3**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ Y view.
+   El **Modelo3** es capaz de explicar casi el 70%  de la variabilidad observada en el precio de las casas (R-squared: 0.6982 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.698) lo que indica que el modelo contiene predictores útiles. 
+  
+```{r}
 modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + view, data = datos_train_model)
 summary(modelo3)
 # R_squared = 0.698, 5 variables
@@ -757,9 +778,10 @@ summary(modelo3)
 
 ```
 
-Para crear el modelo manual, hemos ido introduciendo variables para ver como se ajustaba el coeficiente de determinación.
+**Conclusión**: Finalmente hemos seleccionado el **Modelo2**, ya que hemos ido haciendo pruebas con las distintas variables que pensabamos que podían aportar valor al modelo pero hemos observado que el cambio es mínimo (0.01).
 
-El modelo es capaz de explicar el 70% de la variabilidad observada en el precio de las casas (R-squared: 0.7003 ). El valor de R2-ajustado es muy  cercano al R2 (Adjusted R-squared: 0.7001 ) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1.(Se podría volver a categorizar esta variable)
+Aunque el modelo3 tiene un $R^2$ mayor, estamos introduciendo más variables y como hemos comentado anteriormente apenas sube el coeficiente (0.01), por lo que elegimos el modelo más sencillo.
+
 
 ### Estudio de colinealidad (VIF)
 
@@ -789,14 +811,16 @@ qqline(modelo2$residuals,col="red")
 
  Se confirma que los residuos sí se distribuyen de forma normal.
 
-## Creación del modelo por selección automática (Best subset)
+## Creación del modelo por selección automática.
 
-El proceso de Best Subset consiste en evaluar todos los posibles modelos que se pueden crear por combinación de los predictores disponibles.
+Para comprbar si nuestra elección del modelo es la correcta, vamos a usar técnicas de selección automática.
+
+### Fordward
+
+Este método parte de un conjunto de variables vacío, de manera que este se incrementa con la variable que más mejora el modelo para la métrica seleccionada. Se incluye una variable a cada paso, hasta que se llega al número seleccionado o el modelo no mejora más.
 
 ```{r}
-
-#usamos una seleccion automatica de variables para comparar la evaluacion del modelo
-#por defecto el número de sbconjuntos evaluados está limitado a ocho
+#por defecto el número de subconjuntos evaluados está limitado a ocho
 
 mejor_modelo_forward <- leaps::regsubsets(log_price~., datos_train_model[,-1], method="forward") #Best subset forward
 mejor_modelo_forward
@@ -805,10 +829,19 @@ reg_sum_forward <- summary(mejor_modelo_forward)
 reg_sum_forward
 
 reg_sum_forward$adjr2
-coef(mejor_modelo_forward,5) 
+coef(mejor_modelo_forward,5)
 
 #la función regsubsets con el método forward por defecto evalua 8 subconjuntos diferentes, en función del número de variables que quieras que tenga tu modelo, puedes hacer coef(modelo,n_variables_modelo)
+```
 
+Como se observa, el $R^2$ Ajustado nos proporciona 0.7137, aumenta respecto al modelo 2 en 0.03. Pero al obtener las variables predictoras del modelo con sus coeficientes, incluye sqft_living15, la cual está altamente correlada con log_sqft_living (0.75) y nosotros la hemos descartado de nuestro modelo2.
+
+
+### Backward
+
+Se parte del conjunto de todas las variables, de manera que este se disminuye con la variable que más mejora el modelo para la métrica seleccionada. Se elimina una variable a cada paso, hasta que se llega al número seleccionado o el modelo no mejora más.
+
+```{r}
 mejor_modelo_backward <- leaps::regsubsets(log_price~., datos_train_model[,-1], method="backward") #Best subset backward
 mejor_modelo_backward
 
@@ -819,6 +852,11 @@ reg_sum_backward$adjr2
 coef(mejor_modelo_backward,5)
 
 ```
+
+Como se observa, el $R^2$ Ajustado nos proporciona 0.712, aumenta respecto al modelo 2 en 0.03. Pero al obtener las variables predictoras del modelo con sus coeficientes, incluye sqft_living15, la cual está altamente correlada con log_sqft_living (0.75) y nosotros la hemos descartado de nuestro modelo2.
+
+**Conclusión**: Se han usado las técnicas de selección automática para ver si podíamos aumentar el coeficiente de correlación significativamente, pero observamos que apenas sube (0.03) respecto al modelo que hemos construido manualmente (modelo2), por lo que finalmente elegimos el modelo2, ya que pensamos que es el modelo que permite predecir con mayor precisión el precio de las casas.
+
 
 # Test
 
