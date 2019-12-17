@@ -573,8 +573,7 @@ Hay 70 códigos postales distintos, por lo que hay 70 zonas distintas en nuestro
 **- Variables lat y long **: son numéricas. 
 
 ```{r}
-#datos_train$Pricegroup<-cut(datos_train$price, c(-1,250e3,500e3,750e3,1e6,2e6,999e6))
-datos_train$Pricegroup<-cut(datos_train$price, c(0,250000,500000,750000,1000000,2000000,10000000))
+datos_train$Pricegroup<-cut(datos_train$price, c(0,250000,500000,750000,1000000,2000000,100000000), labels = c("Entre 0 y 250$","Entre 250$ y 500$","Entre 500$ y 750$","Entre 750$ y 1.000$","Entre 1.000$ y 2.000$","Más de 2.000$"))
 
 center_lon = median(datos_train$long,na.rm = TRUE)
 center_lat = median(datos_train$lat,na.rm = TRUE)
@@ -589,9 +588,11 @@ leaflet(datos_train) %>% addProviderTiles("Esri.NatGeoWorldMap") %>%
   setView(lng=center_lon, lat=center_lat,zoom = 12) %>%
 
   addLegend("bottomright", pal = factpal , values = ~Pricegroup,
-            title = "Precio de las casas por localización",
+            title = "Precio (en miles de $)",
             opacity = 1)
+
 ```
+
 
 Como podemos ver en el mapa, las casas más caras son las que están cerca del lago.
 
@@ -609,7 +610,13 @@ En el caso de la variable **Bedrooms** hemos visto que hay 7 casas con 0 habitac
 
 Como en nuestro estudio no tenemos datos faltantes, hemos comprobado con la latitud y la longitud (véase la Figura 1), que la casa con 33 habitaciones es un dato erróneo, ya que su estructura es muy parecida a las casas de los alrededores y no tienen 33 habitaciones. Lo que vamos a hacer a continuación es suponer que la casa con 33 habitaciones es un NA y estudiar cómo imputar ese dato faltante.
 
-![Figura1](Casa con 33 habitaciones_v2.jpeg){width=90%}
+
+![](Casa con 33 habitaciones_v2.jpeg){width=90%}
+
+<div style="text-align: center">
+Figura 1. Casa con 33 habitaciones.
+</div>
+
 
 Primero nos vamos a crear un dataframe auxiliar para probar diferentes métodos y poder tomar una decisión.
 
