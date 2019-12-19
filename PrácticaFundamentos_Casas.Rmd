@@ -114,7 +114,7 @@ library(cowplot)
 
 # Train, test y validación
 
-Lo primero que se va a relizar es separar los datos en los 3 conjuntos de datos fundamentales:  
+Lo primero que se va a realizar es separar los datos en los 3 conjuntos de datos fundamentales:  
 
 -  Conjunto de datos de **entrenamiento**: en nuestro estudio **datos_train**, se corresponde con el 70% del total de los datos.
 -  Conjunto de datos de **validación**: en nuestro estudio **datos_validacion**, se corresponde con el 15% del total de los datos.
@@ -1012,7 +1012,8 @@ Por último, concluimos lo siguiente:
 
 ## Líneas futuras
 
-Con la información obtenida de la selección de variables automática, y los resultados del modelo, se podrían plantear como trabajos futuros, la recategorización de algunas variables, como por ejemplo, grade o view. Rechazamos el modelo 3, aunque poseía mejores métricas que el modelo 2, porque view introducía 4 variables dummies y grade solo 2. Podría analizarse si view podría agruparse de otro modo.
+Con la información obtenida de la selección de variables automática, y los resultados del modelo, se podrían plantear como trabajos futuros, la recategorización de algunas variables, como por ejemplo, view. Rechazamos el modelo 3, aunque poseía mejores métricas que el modelo 2, porque view introducía 4 variables dummies y waterfront solo 1. Podría analizarse si view podría agruparse de otro modo.
 
 También se podría estudiar como se relaciona yr_built con price, y si podría aportar información al modelo. Lo mismo ocurre con zipcode, esta variable no la hemos considerado a estudio por poseer múltiples categorías, pero quizá agrupandola en subcategorías podría ser otra variable a considerar para el modelo.
 
+Por último, hemos comprobado que con un modelo de regresión lineal se puede conseguir una buena estimación del precio, sin embargo, se podría comprobar si con otros modelos se podrían conseguir resultados similares, o incluso mejores.
