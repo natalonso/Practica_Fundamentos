@@ -37,12 +37,12 @@ Contamos con un total de 21 variables que hacen referencia a las característica
 
 ```{r, lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
-#<datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r, setup, include=FALSE}
@@ -72,7 +72,7 @@ library(cowplot)
 
 # Train, test y validación
 
-Lo primero que se va a relizar es separar los datos en los 3 conjuntos de datos fundamentales:  
+Lo primero que se va a realizar es separar los datos en los 3 conjuntos de datos fundamentales:  
 
 -  Conjunto de datos de **entrenamiento**: en nuestro estudio **datos_train**, se corresponde con el 70% del total de los datos.
 -  Conjunto de datos de **validación**: en nuestro estudio **datos_validacion**, se corresponde con el 15% del total de los datos.
@@ -800,7 +800,7 @@ Por último, concluimos lo siguiente:
 
 ## Líneas futuras
 
-Con la información obtenida de la selección de variables automática, y los resultados del modelo, se podrían plantear como trabajos futuros, la recategorización de algunas variables, como por ejemplo, grade o view. Rechazamos el modelo 3, aunque poseía mejores métricas que el modelo 2, porque view introducía 4 variables dummies y grade solo 2. Podría analizarse si view podría agruparse de otro modo.
+Con la información obtenida de la selección de variables automática, y los resultados del modelo, se podrían plantear como trabajos futuros, la recategorización de algunas variables, como por ejemplo, view. Rechazamos el modelo 3, aunque poseía mejores métricas que el modelo 2, porque view introducía 4 variables dummies y waterfront solo 1. Podría analizarse si view podría agruparse de otro modo.
 
 También se podría estudiar como se relaciona yr_built con price, y si podría aportar información al modelo. Lo mismo ocurre con zipcode, esta variable no la hemos considerado a estudio por poseer múltiples categorías, pero quizá agrupandola en subcategorías podría ser otra variable a considerar para el modelo.
 
