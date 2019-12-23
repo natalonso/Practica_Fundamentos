@@ -546,25 +546,14 @@ Se comportan de una manera similar respecto al precio.
 
 ## Localización
 
-En este aparatado vamos a realizar un ggpairs para ver como se comportan las variables de localización respecto al precio.
+En este aparatado vamos a analizar como se comportan las variables de localización respecto al precio.
 
-```{r, fig.align='center', warning=FALSE}
-ggpairs(datos_train,columns=c(21,16:18),mapping = aes(color = "red") )
-
-```
- 
- Se observa lo siguiente:
- 
-   -  En el caso de **zipcode** podríamos agruparlo por códigos postales, aunque si observamos la correlación con el precio no es indicativa, ya que tiene un valor negativo próximo a cero.
-   -  **lat**, **long**, a lo mejor se podría agrupar por tres tipos de latitud y longitud distintas.
- 
 
 **- Variable zipcode **: es categórica.  
 
 ```{r, fig.align='center', warning=FALSE}
 datos_train$zipcode<-as.factor(datos_train$zipcode)
 table(datos_train$zipcode)
-
 ```
 
 Hay 70 códigos postales distintos, por lo que hay 70 zonas distintas en nuestro estudio.
@@ -593,7 +582,11 @@ leaflet(datos_train) %>% addProviderTiles("Esri.NatGeoWorldMap") %>%
 ```
 
 
-Como podemos ver en el mapa, las casas más caras son las que están cerca del lago.
+Como podemos ver en el mapa, las casas más caras son las que están cerca del lago. También se observa lo siguiente:
+ 
+   -  En el caso de **zipcode** podríamos agruparlo por códigos postales, aunque si observamos la correlación con el precio no es indicativa, ya que tiene un valor negativo próximo a cero.
+   -  **lat**, **long**, a lo mejor se podría agrupar por tres tipos de latitud y longitud distintas.
+ 
 
 # Detección, tratamiento e imputación de datos faltantes
 
@@ -638,15 +631,15 @@ datos_train_aux3 <- datos_train
 datos_train_aux3$bedrooms[datos_train_aux3$bedrooms==33] <-NA
 ```
 
-## Imputación con regresión simple
+## Imputación con regresión lineal
 
-A continuación vamos a realizar la imputación de dato faltante con regresión simple:
+A continuación vamos a realizar la imputación de dato faltante con regresión lineal:
 
 ```{r, fig.align='center', warning=FALSE}
-#log_price,bedrooms,bathrooms_group,log_sqft_living,sqftlot,floors,sqft_above,lat,long
+#log_price,bedrooms,bathrooms_group,log_sqft_living,sqft_lot,floors,sqft_above,lat,long
 datos_mice<-datos_train_aux1[,c(21,3,22,23,6,7,12,17,18)]
 
-# Imputación simple, regresión ordinaria:
+# Imputación con regresión lineal:
 imp_1 = mice(datos_mice, method = "norm.predict", m=1) # Cálculo método de imputación
 datostrain_mice = complete(imp_1)  # Imputación de valores
 datostrain_mice$posicion<-c(1:nrow(datostrain_mice))
@@ -728,11 +721,109 @@ corrplot(correlation_matrix2, method = "color", tl.srt=45, addCoef.col ="black",
 
 # Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
 
+Antes de crear el modelo, vamos a crear un nuevo dataframe con las variables que vamos a usar y vamos a reescalarlas. Primero vamos a hacer una prueba para ver que tipo de reescalado es el más adecuado, para ello se representan 4 posibles versiones del reescalado sobre la variable respuesta log_price para ver el efecto de cada tipo de escalado. Finalmente, decidimos que el más adecuado para nuestra análisis iba a ser la estandarización (ya que con este tipo de reescalado no nos afecta tanto la presencia de outliers como en la normalización, que depende tanto del valor máximo como mínimo).
 
 ```{r, fig.align='center', warning=FALSE}
 # Creamos un nuevo dataframe limpio, con las variables ya transformadas y categorizadas
 datos_train_model <- datos_train[c(1,21,3,22,23,6,7:10,25,12,24,17:20,26)]
+
+# Re-escalado de variables:
+
+#FORMA-0: sin reescalar
+f1<-ggplot(datos_train_model, aes(x=log_price)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="Sin reescalar")
+
+#FORMA-1: F-score scaling: resta la media y divide por la desviación tipica
+f2<-ggplot(datos_train_model, aes(x=scale(datos_train_model$log_price, center = TRUE, scale = TRUE) )) + geom_density(alpha=.3, fill="#E1AF00") + labs(x="Reescalado F-score o estandarización")
+
+#FORMA-2: 0-1 scaling: (V - min V)/(max V - min V)
+f3<-ggplot(datos_train_model, aes(x=rescale(datos_train_model$log_price))) + geom_density(alpha=.3, fill="#E1AF00") + labs(x="Reescalado con normalización min-max")
+
+#FORMA-3: Scaling to unit length based on the euclidean length
+f4<-ggplot(datos_train_model, aes(x=datos_train_model$log_price/sqrt(sum(datos_train_model$bedrooms^2)))) + geom_density(alpha=.3, fill="#E1AF00") + labs(x="Reescalado por longitud euclidea")
+
+grid.arrange(f1,f2,f3,f4, nrow=2)
+
 ```
+
+```{r, fig.align='center', warning=FALSE}
+# para variables numéricas: log_price, bedrooms, bathrooms_group, log_sqft_living, sqft_lot, floors, sqft_above, sqft_living_15, sqft_lot_15
+
+f1<-ggplot(datos_train_model, aes(x=log_price)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="log_price")
+
+f2<-ggplot(datos_train_model, aes(x=bedrooms)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="bedrooms")
+
+f3<-ggplot(datos_train_model, aes(x=bathrooms_group)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="bathrooms_group")
+
+f4<-ggplot(datos_train_model, aes(x=log_sqft_living)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="log_sqft_living")
+
+f5<-ggplot(datos_train_model, aes(x=sqft_lot)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_lot")
+
+f6<-ggplot(datos_train_model, aes(x=floors)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="floors")
+
+f7<-ggplot(datos_train_model, aes(x=sqft_above)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_above")
+
+f8<-ggplot(datos_train_model, aes(x=sqft_living15)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_living15")
+
+f9<-ggplot(datos_train_model, aes(x=sqft_lot15)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_lot15")
+
+
+grid.arrange(f1,f2,f3,f4,f5,f6,f7,f8,f9, nrow=3)
+
+datos_train_model_reescalado <- datos_train_model
+
+datos_train_model_reescalado$log_price=c(scale(datos_train_model$log_price))
+datos_train_model_reescalado$bedrooms=c(scale(datos_train_model$bedrooms))
+datos_train_model_reescalado$bathrooms_group=c(scale(datos_train_model$bathrooms_group))
+datos_train_model_reescalado$log_sqft_living=c(scale(datos_train_model$log_sqft_living))
+datos_train_model_reescalado$sqft_lot=c(scale(datos_train_model$sqft_lot))
+datos_train_model_reescalado$floors=c(scale(datos_train_model$floors))
+datos_train_model_reescalado$sqft_above=c(scale(datos_train_model$sqft_above))
+datos_train_model_reescalado$sqft_living15=c(scale(datos_train_model$sqft_living15))
+datos_train_model_reescalado$sqft_lot15=c(scale(datos_train_model$sqft_lot15))
+
+
+f1<-ggplot(datos_train_model_reescalado, aes(x=log_price)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="log_price")
+
+f2<-ggplot(datos_train_model_reescalado, aes(x=bedrooms)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="bedrooms")
+
+f3<-ggplot(datos_train_model_reescalado, aes(x=bathrooms_group)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="bathrooms_group")
+
+f4<-ggplot(datos_train_model_reescalado, aes(x=log_sqft_living)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="log_sqft_living")
+
+f5<-ggplot(datos_train_model_reescalado, aes(x=sqft_lot)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_lot")
+
+f6<-ggplot(datos_train_model_reescalado, aes(x=floors)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="floors")
+
+f7<-ggplot(datos_train_model_reescalado, aes(x=sqft_above)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_above")
+
+f8<-ggplot(datos_train_model_reescalado, aes(x=sqft_living15)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_living15")
+
+f9<-ggplot(datos_train_model_reescalado, aes(x=sqft_lot15)) + geom_density(alpha=.3, fill="#E1AF00") +
+  labs(x="sqft_lot15")
+
+
+grid.arrange(f1,f2,f3,f4,f5,f6,f7,f8,f9, nrow=3)
+
+```
+        
 
 ## Creación del modelo manual
 
@@ -755,11 +846,17 @@ summary(modelo1)
   
    El **Modelo2** es capaz de explicar casi el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1.(Se podría volver a categorizar esta variable)
   
-
+  Como el modelo 2, será el que finalmente elijamos, vamos a ver las diferencias entre reescalar las variables o no reescalarlas. Vemos que los resultado no varían mucho. (EXPLICAR ESTO UN POCO MAS LO DEL INTERCEPT Y LO DE Residual standard error!!!)
+  
 ```{r, fig.align='center', warning=FALSE}
 modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
 summary(modelo2) #-----> ELEGIDO!!
+# R_squared = 0.6828 , 5 variables
+
+modelo2_reescalado<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model_reescalado)
+summary(modelo2_reescalado) #-----> ELEGIDO!!
 # R_squared = 0.68, 5 variables
+
 ```
 
   -**Modelo3**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y view.
@@ -791,9 +888,10 @@ El termino tolerancia es 1/VIF por lo que los límites recomendables están entr
 
 ```{r, fig.align='center', warning=FALSE}
 vif(modelo2) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
+vif(modelo2_reescalado)
 ```
 
-En el modelo seleccionado vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena.
+En el modelo seleccionado vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena. Además, no hay diferencia entre el modelo 2 con y sin reescalado de variables numéricas.
 
 ### Distribución normal de los residuos
 
@@ -811,7 +909,7 @@ qqline(modelo2$residuals,col="red")
 
 Para comprobar si nuestra elección del modelo es la correcta, vamos a usar técnicas de selección automática.
 
-### Fordward
+### Forward
 
 Este método parte de un conjunto de variables vacío, de manera que este se incrementa con la variable que más mejora el modelo para la métrica seleccionada. Se incluye una variable a cada paso, hasta que se llega al número seleccionado o el modelo no mejora más.
 
@@ -904,7 +1002,7 @@ colnames(predict_precio_test)[1] <- "predict_precio"
 
 ## Variable respuesta test vs valor predicho
 
-Una vez obtenida la predicción del precio usando el modelo2, comparamos con el precio real calculando la diferencia entre ambos. Finalmente, hallamos la media de todas las diferencias y comprabamos que de media hay una diferencia de -0.02 aproximadamente. 
+Una vez obtenida la predicción del precio usando el modelo2, comparamos con el precio real calculando la diferencia entre ambos. Finalmente, hallamos la media de todas las diferencias y comprabamos que de media hay una diferencia de 133861.8$ aproximadamente. 
 
 ```{r, fig.align='center', warning=FALSE}
 datos_test_mod$id_aux <- rownames(datos_test_mod)
@@ -915,20 +1013,16 @@ comparacion <- comparacion[,c(1,3,22)]
 ```
 
 ```{r, fig.align='center', warning=FALSE}
+comparacion$precio_diff <- abs(10^(comparacion$log_price) - 10^(comparacion$predict_precio)) #unidades naturales
+dif_media_test_unidades_naturales<-mean(comparacion$precio_diff)
+dif_media_test_unidades_naturales
 
-comparacion$precio_diff <- abs(comparacion$log_price - comparacion$predict_precio) #unidades logaritmicas
-dif_media_test_unidades_log <- mean(comparacion$precio_diff) #unidades logaritmicas
-dif_media_test_unidades_nat<-10^(dif_media_test_unidades_log) #unidades naturales
-dif_media_test_unidades_nat #unidades naturales
- 
-comparacion$precio_diff2 <- 10^(abs(comparacion$log_price - comparacion$predict_precio)) #unidades naturales
-dif_media_test_unidades_nat2<-mean(comparacion$precio_diff2)
-dif_media_test_unidades_nat2
+comparacion$log_price_nat <- 10^(comparacion$log_price)
+comparacion$predict_precio_nat <- 10^(comparacion$predict_precio)
 
-comparacion$precio_diff3 <- abs(10^(comparacion$log_price) - 10^(comparacion$predict_precio)) #unidades naturales
-dif_media_test_unidades_nat3<-mean(comparacion$precio_diff3)
-dif_media_test_unidades_nat3
-
+comparacion$precio_diff2 <- abs(comparacion$log_price_nat-comparacion$predict_precio_nat)
+dif_media_test_unidades_naturales2<-mean(comparacion$precio_diff2)
+dif_media_test_unidades_naturales2
 ```
 
 
@@ -993,17 +1087,19 @@ comparacion_val <- comparacion_val[,c(1,3,22)]
 ```
 
 ```{r, fig.align='center', warning=FALSE}
-comparacion_val$dif_precios <- comparacion_val$log_price - comparacion_val$precio_pred 
-comparacion_val$dif_transformada2 <- 10^(comparacion_val$dif_precios)
+comparacion_val$precio_diff <- abs(10^(comparacion_val$log_price) - 10^(comparacion_val$precio_pred)) #unidades naturales
+dif_media_test_unidades_naturales<-mean(comparacion_val$precio_diff)
+dif_media_test_unidades_naturales
 
-dif_media_val<-mean(comparacion_val$dif_precios)
-10^(dif_media_val)
+comparacion_val$log_price_nat <- 10^(comparacion_val$log_price)
+comparacion_val$predict_precio_nat <- 10^(comparacion_val$precio_pred)
 
-dif_media_val2<-mean(comparacion_val$dif_transformada2)
-dif_media_val2
+comparacion_val$precio_diff2 <- abs(comparacion_val$log_price_nat-comparacion_val$predict_precio_nat)
+dif_media_test_unidades_naturales2<-mean(comparacion_val$precio_diff2)
+dif_media_test_unidades_naturales2
 ```
 
-De nuevo, calculamos la diferencia entre el precio predicho y el real, y hallamos la media. En este caso, la diferencia media es de -0.018, muy similar a la anterior. Podemos concluir que el modelo es bueno. Como en ambos casos hemos obtenido un diferencia media negativa, podría deducirse que el modelo precide precios al alza (por encima del real).
+De nuevo, calculamos la diferencia entre el precio predicho y el real, y hallamos la media. En este caso, la diferencia media es de 132696.9$, muy similar a la anterior. Podemos concluir que el modelo es bueno.
 
 
 # Conclusiones y líneas futuras
