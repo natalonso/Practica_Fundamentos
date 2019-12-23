@@ -79,12 +79,12 @@ A continuación se van a describir las variables:
 
 ```{r, lectura_datos, include=FALSE}
 
-datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
-#<datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r, setup, include=FALSE}
@@ -846,7 +846,8 @@ summary(modelo1)
   
    El **Modelo2** es capaz de explicar casi el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1.(Se podría volver a categorizar esta variable)
   
-  Como el modelo 2, será el que finalmente elijamos, vamos a ver las diferencias entre reescalar las variables o no reescalarlas. Vemos que los resultado no varían mucho. (EXPLICAR ESTO UN POCO MAS LO DEL INTERCEPT Y LO DE Residual standard error!!!)
+  Como el modelo 2, será el que finalmente elijamos, vamos a ver las diferencias entre reescalar las variables o no reescalarlas. 
+  
   
 ```{r, fig.align='center', warning=FALSE}
 modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
@@ -858,6 +859,9 @@ summary(modelo2_reescalado) #-----> ELEGIDO!!
 # R_squared = 0.68, 5 variables
 
 ```
+
+Como se observa, vemos que los resultados se parecen mucho, de hecho sólo cambiam los coeficientes, pero los p-valores de cada $Beta$ no varian. El $R^2$ y $R^2$ ajustado son los mismos. Más adelante haremos el estudio de inflacción de la varianza (VIF) y decidiremos si nos quedamos con el reescalado. 
+
 
   -**Modelo3**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y view.
   
@@ -891,19 +895,51 @@ vif(modelo2) #nos da un factor que mida la inflacion de la varianza por tener va
 vif(modelo2_reescalado)
 ```
 
-En el modelo seleccionado vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena. Además, no hay diferencia entre el modelo 2 con y sin reescalado de variables numéricas.
+En los dos modelos, con y sin reescalado,  vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena. Además, no hay diferencia entre el modelo 2 con y sin reescalado de variables numéricas.
 
-### Distribución normal de los residuos
+Por lo tanto viendo este resultado junto al anterior decidimos quedarnos con el **modelo2 sin reeescalar**.
 
-Los residuos se deben distribuir de forma normal con media cero. Para comprobarlo vamos a realizar un QQ-plot
+### Análisis de residuos
+
+Se va a comprobar las hipótesis que deben de cumplirse para poder utilizar el modelo2. 
+
+  - Normalidad de los residuos
+  - Independencia de los residuos
+  - Homocedasticidad (igualdad de las varianzas de los residuos)
+  - Linealidad de los residuos
+
+Se obtienen 4 gráficos que nos ayudan para la validación del modelo. Estos gráficos son:
+
+  - Valores predichos frente a residuos
+  - Gráfico Q-Q de normalidad
+  - Valores predichos frente a raíz cuadrada de los residuos estandarizados (en valor absoluto)
+  - Residuos estandarizados frente a leverages 
+
 ```{r, fig.align='center', warning=FALSE}
-
-qqnorm(modelo2$residuals)
-qqline(modelo2$residuals,col="red")
+par(mfrow=c(2,2))
+plot(modelo2)
 
 ```
 
- Se confirma que los residuos sí se distribuyen de forma normal.
+Los gráficos 1 y 3 se utilizan para contrastar gráficamente la independencia, la homocedasticidad y la linealidad de los residuos. Idealmente, los residuos deben estar aleatoriamente distribuidos a lo largo del gráfico, sin formar ningún tipo de patrón.
+
+El gráfico Q-Q, (Gráfico 2) por su parte, se utiliza para contrastar la normalidad de los residuos. Lo deseable es que los residuos estandarizados estén lo más cerca posible a la línea punteada que aparece en el gráfico. En este estudio se ve que en los extremos se desvian de la recta.
+
+El gráfico de residuos estandarizados frente a leverages (Gráfico 4) se utiliza para detectar puntos con una influencia importante en el cálculo de las estimaciones de los parámetros. En caso de detectarse algún punto fuera de los límites que establecen las líneas discontinuas debe estudiarse este punto de forma aislada para detectar, por ejemplo, si la elevada importancia de esa observación se debe a un error.
+
+No parece que los residuos sigan una distribución Normal. Vamos a confirmar si esto es así mediante métodos analíticos (Test de normalidad Kolmogorov-Smirnov)
+
+#### Test Normalidad Kolmogorov-Smirnov
+
+Partimos de la Hipótesis nula de que los residuos del modelo se distribuyen como una Normal.
+
+```{r, fig.align='center', warning=FALSE}
+
+ks.test(modelo2$residuals, 'pnorm')
+```
+
+Los resultados del test nos confirman lo que se intuía en el gráfico Q-Q: los residuos no siguen una distribución normal, puesto que el p-valor que se obtiene (0.22-e16) es menor que 0.1. Por lo que debemos rechazar la Hipótesis nula, es decir los residuos no se distribuyen como una distribución Normal.
+
 
 ## Creación del modelo por selección automática.
 
@@ -998,6 +1034,7 @@ datos_test_mod <- datos_test[c(1,22,4,23,24,7:11,25,13,26,15,27,17:21)]
 #eliminamos la variable respuesta para predecir
 predict_precio_test <- as.data.frame(predict(modelo2, newdata = datos_test_mod[-2,]))
 colnames(predict_precio_test)[1] <- "predict_precio"
+
 ```
 
 ## Variable respuesta test vs valor predicho
@@ -1024,7 +1061,6 @@ comparacion$precio_diff2 <- abs(comparacion$log_price_nat-comparacion$predict_pr
 dif_media_test_unidades_naturales2<-mean(comparacion$precio_diff2)
 dif_media_test_unidades_naturales2
 ```
-
 
 
 
@@ -1112,9 +1148,11 @@ Por último, concluimos lo siguiente:
 
 - Para medir la correlación entre las variables, se calcula la matriz de correlación y se observa que las variables con mayor correlación con la variable respuesta price son: bathrooms, sqft_living, sqft_above y lat. También se concluye que sqft_living y sqft_above están altamente correlacionadas entre sí, por lo que para el modelo no las consideramos conjuntamente.
 
+- Se ha realizado el reescalado de las variables y hemos visto que obteníamos los mismos resultados, por lo que se ha decidido continuar el estudio sin reescalar.
+
 - Tras los dos análisis anteriores, y después de realizar varias pruebas para implementar el mejor modelo, concluimos que las variables más apropiadas para un modelo de regresión lineal son: bathrooms, sqft_living, lat y waterfront. El modelo elegido, tiene asociado un *Adjusted R-squared* de 0.68, es decir, puede explicar un 68% de la variabilidad observada en el precio de las casas.
 
-- Finalmente, con los datos de test y validación, comprobamos que el modelo seleccionado predice los precios con una diferencia con el precio real de aproximadamente 1$ de media aproximadamente. Podemos concluir que el modelo elegido para la predicción del precio es bastante preciso.
+- Finalmente, con los datos de test y validación, comprobamos que el modelo seleccionado predice los precios con una diferencia media respecto al precio real de aproximadamente 133.000$. 
 
 ## Líneas futuras
 
@@ -1122,4 +1160,4 @@ Con la información obtenida de la selección de variables automática, y los re
 
 También se podría estudiar como se relaciona yr_built con price, y si podría aportar información al modelo. Lo mismo ocurre con zipcode, esta variable no la hemos considerado a estudio por poseer múltiples categorías, pero quizá agrupandola en subcategorías podría ser otra variable a considerar para el modelo.
 
-Por último, hemos comprobado que con un modelo de regresión lineal se puede conseguir una buena estimación del precio, sin embargo, se podría comprobar si con otros modelos se podrían conseguir resultados similares, o incluso mejores.
+Por último, hemos comprobado que con un modelo de regresión lineal no llega a  precisar todo lo que nos gustaría, por lo que podemos probar si aplicando otros modelos se podrían conseguir mejores resultados. 
