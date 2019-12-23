@@ -915,10 +915,20 @@ comparacion <- comparacion[,c(1,3,22)]
 ```
 
 ```{r, fig.align='center', warning=FALSE}
-comparacion$precio_diff <- comparacion$log_price - comparacion$predict_precio
-dif_media_test <- mean(comparacion$precio_diff)
-dif_media_test
-exp(dif_media_test)
+
+comparacion$precio_diff <- abs(comparacion$log_price - comparacion$predict_precio) #unidades logaritmicas
+dif_media_test_unidades_log <- mean(comparacion$precio_diff) #unidades logaritmicas
+dif_media_test_unidades_nat<-10^(dif_media_test_unidades_log) #unidades naturales
+dif_media_test_unidades_nat #unidades naturales
+ 
+comparacion$precio_diff2 <- 10^(abs(comparacion$log_price - comparacion$predict_precio)) #unidades naturales
+dif_media_test_unidades_nat2<-mean(comparacion$precio_diff2)
+dif_media_test_unidades_nat2
+
+comparacion$precio_diff3 <- abs(10^(comparacion$log_price) - 10^(comparacion$predict_precio)) #unidades naturales
+dif_media_test_unidades_nat3<-mean(comparacion$precio_diff3)
+dif_media_test_unidades_nat3
+
 ```
 
 
