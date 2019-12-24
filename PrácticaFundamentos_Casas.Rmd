@@ -1,14 +1,26 @@
 ---
-title: "Practica Fundamentos Casas"
+title: "Predicción de precios de casas en King County (Seattle)"
 author: "Natalia Alonso, Beatriz Martín y Susana Albarran"
-date: "2/12/2019"
+date: "24/12/2019"
 
-output: bookdown::gitbook
+fig_caption: yes
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    code_folding: show
 ---
 
 #  Introducción
 
 Los datos que se van a analizar en este proyecto han sido obtenidos desde Kaggle. Contienen precios de casas que fueron vendidas desde mayo de 2014 hasta mayo de 2015 en **King County** que es un condado ubicado en el estado estadounidense de Washington. 
+
+
+![](portada.jpg){width=100%}
+
 
 Se van a seguir los siguientes pasos:
 
@@ -79,12 +91,12 @@ A continuación se van a describir las variables:
 
 ```{r, lectura_datos, include=FALSE}
 
-#datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
+datos <- read.csv("C:/Users/natal/OneDrive/Documentos/0_MIS_DOCUMENTOS/2.MÁSTER/2_Curso_2019-2020/Primer_Cuatrimestre/2.Fundamentos_de_Análisis/BloqueIV_Métodos/Práctica final/git/kc_house_data.csv")
 
 #datos <- read.csv("C:/Users/Beatriz/Desktop/Máster/1er trimestre/Fundamentos/Parte 4_Métodos de Análisis de datos/Prac_git/kc_house_data.csv")
 
 
-datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
+#datos <- read.csv("C:/Users/susi_/Desktop/R/Practica_Fundamentos_R/Repositorios git/kc_house_data.csv")
 ```
 
 ```{r, setup, include=FALSE}
@@ -146,7 +158,7 @@ datos_validacion=datos[indices_validacion,]
 
 Para el análisis de los datos, se han dividido las variables en tres categorías:
 
-  -**Variables de características de las casas**: price, bedrooms, bathrooms,floors, sqft_living, sqft_lot, sqft_above, sqfr_basement, sqft_living15 y sqft_lot15.
+  -**Variables de características de las casas**: price, bedrooms, bathrooms, floors, sqft_living, sqft_lot, sqft_above, sqfr_basement, sqft_living15 y sqft_lot15.
   
   -**Variables de calidad**: waterfront, view, condition, grade, yr_built y yr_renovated.
   
@@ -670,7 +682,7 @@ En este caso el valor que toma es 3.122092, por lo que coincide con el anterior 
 
 ## Imputación comparando los vecinos más cercanos
 
-Otro modo de imputar el dato faltante es compararlo con los vecinos más cercanos.Para ello, lo que hemos hecho es calcular la diferencia entre la latitud de la casa con 33 habitaciones con el resto y lo mismo para la longitud. Luego hemos sumado esas diferenecias y nos hemos quedado con las 15 distancias más pequeñas.
+Otro modo de imputar el dato faltante es compararlo con los vecinos más cercanos. Para ello, lo que hemos hecho es calcular la diferencia entre la latitud de la casa con 33 habitaciones con el resto y lo mismo para la longitud. Luego hemos sumado esas diferenecias y nos hemos quedado con las 15 distancias más pequeñas.
 
 ```{r, fig.align='center', warning=FALSE}
 datos_train_aux3$diferencia_lat<- abs(datos_train$lat[datos_train$bedrooms==33]-datos_train[,17])
@@ -831,20 +843,30 @@ Para crear el modelo manual, hemos ido introduciendo variables para ver como se 
 
 Para este apartado nos hemos basado en la matriz de correlaciones del apartado anterior y en los gráficos del análisis exploratorio.
 
-  -**Modelo1**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ.
+  -**Modelo1a**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group (0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ.
   
-  El **Modelo1** es capaz de explicar casi el 67%  de la variabilidad observada en el precio de las casas (R-squared: 0.6699 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6697) lo que indica que el modelo contiene predictores útiles.
+  El **Modelo1a** es capaz de explicar casi el 67%  de la variabilidad observada en el precio de las casas (R-squared: 0.6699 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6697) lo que indica que el modelo contiene predictores útiles.
 
 ```{r, fig.align='center', warning=FALSE}
 
-modelo1<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat, data = datos_train_model)
-summary(modelo1)
+modelo1a<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat, data = datos_train_model)
+summary(modelo1a)
 # R_squared = 0.669, 4 variables
 ```
  
-  -**Modelo2**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y waterfront.
+   -**Modelo1b**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group (0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y view.
   
-   El **Modelo2** es capaz de explicar casi el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1.(Se podría volver a categorizar esta variable)
+   El **Modelo1b** es capaz de explicar casi el 70%  de la variabilidad observada en el precio de las casas (R-squared: 0.6982). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.698) lo que indica que el modelo contiene predictores útiles. 
+  
+```{r, fig.align='center', warning=FALSE}
+modelo1b<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + view, data = datos_train_model)
+summary(modelo1b)
+# R_squared = 0.698, 5 variables
+```
+
+  -**Modelo2**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group (0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y waterfront.
+  
+   El **Modelo2** es capaz de explicar casi el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1 (se podría volver a categorizar esta variable).
   
   Como el modelo 2, será el que finalmente elijamos, vamos a ver las diferencias entre reescalar las variables o no reescalarlas. 
   
@@ -860,24 +882,14 @@ summary(modelo2_reescalado) #-----> ELEGIDO!!
 
 ```
 
-Como se observa, vemos que los resultados se parecen mucho, de hecho sólo cambiam los coeficientes, pero los p-valores de cada $Beta$ no varian. El $R^2$ y $R^2$ ajustado son los mismos. Más adelante haremos el estudio de inflacción de la varianza (VIF) y decidiremos si nos quedamos con el reescalado. 
+Como se observa, vemos que los resultados se parecen mucho, de hecho sólo cambian los coeficientes, pero los p-valores de cada $Beta$ no varían. El $R^2$ y $R^2$ ajustado son los mismos. Más adelante haremos el estudio de inflacción de la varianza (VIF) y decidiremos si nos quedamos con el reescalado. 
 
-
-  -**Modelo3**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group(0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y view.
-  
-   El **Modelo3** es capaz de explicar casi el 70%  de la variabilidad observada en el precio de las casas (R-squared: 0.6982). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.698) lo que indica que el modelo contiene predictores útiles. 
-  
-```{r, fig.align='center', warning=FALSE}
-modelo3<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + view, data = datos_train_model)
-summary(modelo3)
-# R_squared = 0.698, 5 variables
-```
 
 **Conclusión**: Hemos visto que con waterfront y view, bedrooms y bathrooms_group, y log_sqft_living y sqft_living15, respectivamente, teniendo el resto de variables iguales, afectan mínimamente al $R^2$-ajustado. Por otro lado, yr_renovated_catg y long no aportan al modelo.
 
 Finalmente hemos seleccionado el **Modelo2**, ya que hemos ido haciendo pruebas con las distintas variables que pensabamos que podían aportar valor al modelo pero hemos observado que el cambio es mínimo (0.01).
 
-Aunque el modelo3 tiene un $R^2$ mayor, estamos introduciendo más variables y como hemos comentado anteriormente apenas sube el coeficiente (0.01), por lo que elegimos el modelo más sencillo (principio de parsimonia).
+Aunque el modelo1b tiene un $R^2$ mayor, estamos introduciendo más variables y como hemos comentado anteriormente apenas sube el coeficiente (0.01), por lo que elegimos el modelo más sencillo (principio de parsimonia).
 
 
 ### Estudio de colinealidad (VIF)
@@ -897,7 +909,7 @@ vif(modelo2_reescalado)
 
 En los dos modelos, con y sin reescalado,  vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena. Además, no hay diferencia entre el modelo 2 con y sin reescalado de variables numéricas.
 
-Por lo tanto viendo este resultado junto al anterior decidimos quedarnos con el **modelo2 sin reeescalar**.
+Por lo tanto, viendo este resultado junto al anterior decidimos quedarnos con el **modelo2 sin reeescalar**.
 
 ### Análisis de residuos
 
@@ -993,6 +1005,7 @@ Una vez realizado el análisis exploratorio de datos e implementado el modelo, v
 
 
 ```{r, fig.align='center', warning=FALSE}
+
 # TRANSFORMAR LOS DATOS DE TEST CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
 
 #id
@@ -1160,4 +1173,4 @@ Con la información obtenida de la selección de variables automática, y los re
 
 También se podría estudiar como se relaciona yr_built con price, y si podría aportar información al modelo. Lo mismo ocurre con zipcode, esta variable no la hemos considerado a estudio por poseer múltiples categorías, pero quizá agrupandola en subcategorías podría ser otra variable a considerar para el modelo.
 
-Por último, hemos comprobado que con un modelo de regresión lineal no llega a  precisar todo lo que nos gustaría, por lo que podemos probar si aplicando otros modelos se podrían conseguir mejores resultados. 
+Por último, hemos comprobado que con un modelo de regresión lineal no llega a precisar todo lo que nos gustaría, por lo que podemos probar si aplicando otros modelos se podrían conseguir mejores resultados. 
