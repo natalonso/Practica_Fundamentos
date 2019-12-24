@@ -907,10 +907,9 @@ A continuación, vamos a usar el **Factor de Inflación de la Varianza (VIF)**, 
  - 1 < VIF < 5: La regresión puede verse afectada por cierta colinealidad.
  - 5  < VIF < 10: Causa de preocupación.
  
-El término tolerancia es 1/VIF por lo que los límites recomendables están entre 1 y 0.1.
 
 ```{r, fig.align='center', warning=FALSE}
-vif(modelo2) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
+vif(modelo2)
 vif(modelo2_reescalado)
 ```
 
