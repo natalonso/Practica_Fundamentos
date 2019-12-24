@@ -1,6 +1,6 @@
 ---
 title: "Predicción de precios de casas en King County (Seattle)"
-author: "Natalia Alonso, Beatriz Martín y Susana Albarran"
+author: "Natalia Alonso, Beatriz Martín y Susana Albarrán"
 date: "24/12/2019"
 
 fig_caption: yes
@@ -13,6 +13,8 @@ output:
     theme: flatly
     code_folding: show
 ---
+
+Nota: Enlace a Github: https://github.com/natalonso/Practica_Fundamentos.git
 
 #  Introducción
 
@@ -52,13 +54,13 @@ A continuación se van a describir las variables:
 
  **3.- Price**: precio de venta de la casa.  
 
- **4.- Bedrooms**: núnero de habitaciones que tiene la casa.  
+ **4.- Bedrooms**: número de habitaciones que tiene la casa.  
 
  **5.- Bathrooms**: número de cuartos de baño. Es importante destacar que 0.5 cuenta como baño que tiene ducha y no bañera. Esto lo tratamos con más detalle en el apartado de análisis de datos.
 
- **6.- sqft_living**: pies cuadrados habitables.  
+ **6.- Sqft_living**: pies cuadrados habitables.  
 
- **7.- sqft_lot**: pies cuadrados del terreno de la parcela.  
+ **7.- Sqft_lot**: pies cuadrados del terreno de la parcela.  
 
  **8.- Floors**: número de plantas. Hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido. Por ejemplo la buhardilla.  
 
@@ -70,23 +72,23 @@ A continuación se van a describir las variables:
 
  **12.- Grade**: grados de calidad en la construccion. Toma valores de 1 a 13.
 
- **13.- sqft_above**: pies cuadrados por encima del suelo.  
+ **13.- Sqft_above**: pies cuadrados por encima del suelo.  
 
- **14.- sqft_basement**: pies cuadrados del sótano.
+ **14.- Sqft_basement**: pies cuadrados del sótano.
 
- **15.- yr_built**: año de construcción.
+ **15.- Yr_built**: año de construcción.
 
- **16.- yr_renovated**: año en el que la casa se ha realizado.
+ **16.- Yr_renovated**: año en el que la casa se ha realizado.
 
  **17.- Zipcode**: en qué área se encuentra la casa. 
 
- **18.- lat**: latitud.
+ **18.- Lat**: latitud.
 
- **19.- long**: longitud.
+ **19.- Long**: longitud.
 
- **20.- sqft_living15**: pies cuadrados del interior de las 15 casas más cercanas.
+ **20.- Sqft_living15**: pies cuadrados del interior de las 15 casas más cercanas.
 
- **21.- sqft_lot15**: pies cuadrados del terreno de las 15 casas más cercanas.
+ **21.- Sqft_lot15**: pies cuadrados del terreno de las 15 casas más cercanas.
 
 
 ```{r, lectura_datos, include=FALSE}
@@ -130,7 +132,7 @@ Lo primero que se va a realizar es separar los datos en los 3 conjuntos de datos
 
 -  Conjunto de datos de **entrenamiento**: en nuestro estudio **datos_train**, se corresponde con el 70% del total de los datos.
 -  Conjunto de datos de **validación**: en nuestro estudio **datos_validacion**, se corresponde con el 15% del total de los datos.
--  Conjunto de datos de **test**: en nuestro estudia **datos_test**, se corresponde con el 15% del total de los datos.
+-  Conjunto de datos de **test**: en nuestro estudio **datos_test**, se corresponde con el 15% del total de los datos.
 
 ```{r, fig.align='center', warning=FALSE}
 
@@ -193,7 +195,7 @@ datos_train$id <- as.factor(datos_train$id)
 
 A continuación, se va a realizar un análisis exploratorio para ver cómo se comporta cada variable:  
 
-**-Variable Price**: es numérica, es la variable respuesta del estudio:
+**-Variable price**: es numérica, es la variable respuesta del estudio:
 
 ```{r, fig.align='center', warning=FALSE}
 
@@ -217,7 +219,7 @@ ggplot(datos_train, aes(x=log_price)) + geom_histogram(aes(y=..density..), bins=
  
 Como se observa con la transformación logarítmica de la variable price (log_price), obtenemos una distribución más simétrica. 
 
-**-Variable Bedroom**: es numérica.
+**-Variable bedroom**: es numérica.
 
 ```{r, fig.align='center', warning=FALSE}
 table(datos_train$bedrooms)
@@ -258,7 +260,7 @@ Vamos a agrupar los baños del siguiente modo:
 
 -Valores: 0.25, 0.5, 0.75, 1 = 1 baño.
 
--Valores: 1,25, 1,5, 1.75, 2 = 2 baños.
+-Valores: 1.25, 1.5, 1.75, 2 = 2 baños.
 
 Y así hasta 8 baños, que es el número máximo. Esto lo hacemos porque queremos agrupar los baños en función del número de estancias que ocupa, no en función del número de piezas que tenga.
 
@@ -302,8 +304,6 @@ Viendo la distribución de la variable (primer gráfico), se va a realizar una t
 ```{r, fig.align='center', warning=FALSE}
 datos_train$log_sqft_living<- log10(datos_train$sqft_living)
 
-#options(scipen=999)
-#options(repr.plot.width=6, repr.plot.height=3,align="center")
 p5.1 <- ggplot(datos_train, aes(x=log_sqft_living)) + geom_histogram(aes(y=..density..), bins=30, colour="black", fill="white") + geom_density(alpha=.3, fill="#E1AF00")
 
 p6.1 <- ggplot(datos_train, aes(log_sqft_living, log_price)) +
@@ -316,7 +316,7 @@ grid.arrange(p5.1,p6.1, nrow=1)
 
 Se puede observar cómo ahora los datos se han normalizado.
 
-**- Variable  sqft_lot**: es una variable numérica, vamos a estudiar cómo se comporta.
+**- Variable sqft_lot**: es una variable numérica, vamos a estudiar cómo se comporta.
 
 ```{r, fig.align='center', warning=FALSE}
 
@@ -331,7 +331,9 @@ grid.arrange(p7,p8, nrow=1)
 
 ```
 
-**- Variable  floors**: hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido. Por ejemplo, si la planta baja tiene $50m^2$, y la buhardilla tiene $20m^2$, floors va a tomar el valor de 1.5. Esta variable es numérica.
+Esta variable no parece que tenga una relación lineal muy clara con price, por lo que no vemos necesario hacer ninguna transformación ya que no la usaremos para la implementación del modelo.
+
+**- Variable floors**: hay que tener en cuenta que se contabiliza 0.5 plantas cuando una planta no tiene todo el espacio construido. Por ejemplo, si la planta baja tiene $50m^2$, y la buhardilla tiene $20m^2$, floors va a tomar el valor de 1.5. Esta variable es numérica.
 
 ```{r, fig.align='center', warning=FALSE}
 table(datos_train$floors)
@@ -348,9 +350,9 @@ labs(x="floors")+theme(legend.position="none")
 grid.arrange(p9,p10, nrow=1)
 ```
 
-Podemos observar cómo aparenteme el número de plantas no influye en el precio de las casas.
+Podemos observar cómo aparentemente el número de plantas no influye en el precio de las casas.
 
-**- sqft_above **: es numérica. Esta variable es la diferencia entre sqft_living y sqft_basement.
+**- Variable sqft_above **: es numérica. Esta variable es la diferencia entre sqft_living y sqft_basement.
 
 ```{r, fig.align='center', warning=FALSE}
 
@@ -381,7 +383,6 @@ Se observa que alrededor de unas 12.500 casas no tienen sótano, por lo que la v
 - 1 -> casas que sí tienen sótano.
 
 ```{r, fig.align='center', warning=FALSE}
-#datos_train$sqft_basement_cat <- as.numeric(datos_train$sqft_basement)
 datos_train$sqft_basement_cat <- cut(datos_train$sqft_basement,breaks = c(-1,0,6000),labels=c(0,1))
 table(datos_train$sqft_basement_cat)
 ```
@@ -405,6 +406,8 @@ ggplot(datos_train, aes(x=sqft_living15)) + geom_histogram(bins=30, colour="blac
 
 ```
 
+La variable sqft_living15 está altamente correlacionada con sqft_living (como se verá en el apartado 5), por tanto no podremos considerar ambas para la creación del modelo. Además, ambas dan una información muy parecida, por este motivo, hemos decidido dar mayor importancia a sqft_living y con sqft_living15 no realizaremos ninguna transformación.
+
 **- Variable sqft_lot15**: es numérica.
 
 ```{r, fig.align='center', warning=FALSE}
@@ -414,6 +417,8 @@ options(repr.plot.width=6, repr.plot.height=3,align="center")
 ggplot(datos_train, aes(x=sqft_lot15)) + geom_histogram(bins=30, colour="black", fill="#E1AF00") 
 
 ```
+
+Entre sqft_lot y sqft_lot15 sucede lo mismo que con sqft_living y sqft_living15, ambas variables aportan la misma información y están muy correlacionadas entre sí, a partir de ahora tabajaremos con sqft_lot.
 
 ## Calidad
 
@@ -455,7 +460,7 @@ labs(x="view")+theme(legend.position="none")
 grid.arrange(p11,p12, nrow=1)
 ```
 
-Se observa que la mayoría de las casas no tienen buenas vistas y que las casas que tienen mejores vistas son más caras respeto de las otras.
+Se observa que la mayoría de las casas no tienen buenas vistas y que las casas que tienen mejores vistas son más caras respecto de las otras.
 
 **- Variable condition**: es categórica. Toma valores del 1 al 5.
 
@@ -464,7 +469,7 @@ datos_train$condition<-as.factor(datos_train$condition)
 table(datos_train$condition)
 ```
 
-La mayoría de casas tiene condición 3 y 4.
+La mayoría de casas tienen condición 3 y 4.
 
 ```{r, fig.align='center', warning=FALSE}
 p13<-ggplot(datos_train, aes(x=condition)) + geom_histogram(colour="black", stat ="count",fill="tomato")
@@ -512,7 +517,7 @@ ggplot(datos_train, aes(x=as.factor(datos_train$grade_categ), y=log_price, fill=
 
 Sigue el mismo patrón que antes, es decir, a mayor grado mayor precio.
 
-**- yr_built  **: es numérica.
+**- Variable yr_built  **: es numérica.
 
 ```{r, fig.align='center', warning=FALSE}
 table(datos_train$yr_built)
@@ -558,7 +563,7 @@ Se comportan de una manera similar respecto al precio.
 
 ## Localización
 
-En este aparatado vamos a analizar como se comportan las variables de localización respecto al precio.
+En este apartado vamos a analizar cómo se comportan las variables de localización respecto al precio.
 
 
 **- Variable zipcode **: es categórica.  
@@ -682,7 +687,7 @@ En este caso el valor que toma es 3.122092, por lo que coincide con el anterior 
 
 ## Imputación comparando los vecinos más cercanos
 
-Otro modo de imputar el dato faltante es compararlo con los vecinos más cercanos. Para ello, lo que hemos hecho es calcular la diferencia entre la latitud de la casa con 33 habitaciones con el resto y lo mismo para la longitud. Luego hemos sumado esas diferenecias y nos hemos quedado con las 15 distancias más pequeñas.
+Otro modo de imputar el dato faltante es compararlo con los vecinos más cercanos. Para ello, lo que hemos hecho es calcular la diferencia entre la latitud de la casa con 33 habitaciones con el resto y lo mismo para la longitud. Luego hemos sumado esas diferencias y nos hemos quedado con las 15 distancias más pequeñas.
 
 ```{r, fig.align='center', warning=FALSE}
 datos_train_aux3$diferencia_lat<- abs(datos_train$lat[datos_train$bedrooms==33]-datos_train[,17])
@@ -733,7 +738,7 @@ corrplot(correlation_matrix2, method = "color", tl.srt=45, addCoef.col ="black",
 
 # Ajuste, interpretación y diagnosis del modelo de regresión lineal múltiple
 
-Antes de crear el modelo, vamos a crear un nuevo dataframe con las variables que vamos a usar y vamos a reescalarlas. Primero vamos a hacer una prueba para ver que tipo de reescalado es el más adecuado, para ello se representan 4 posibles versiones del reescalado sobre la variable respuesta log_price para ver el efecto de cada tipo de escalado. Finalmente, decidimos que el más adecuado para nuestra análisis iba a ser la estandarización (ya que con este tipo de reescalado no nos afecta tanto la presencia de outliers como en la normalización, que depende tanto del valor máximo como mínimo).
+Antes de crear el modelo, vamos a crear un nuevo dataframe con las variables que vamos a usar y vamos a reescalarlas. Primero vamos a hacer una prueba para ver que tipo de reescalado es el más adecuado, para ello se representan 4 posibles versiones del reescalado sobre la variable respuesta log_price para ver el efecto de cada tipo de escalado.
 
 ```{r, fig.align='center', warning=FALSE}
 # Creamos un nuevo dataframe limpio, con las variables ya transformadas y categorizadas
@@ -757,6 +762,8 @@ f4<-ggplot(datos_train_model, aes(x=datos_train_model$log_price/sqrt(sum(datos_t
 grid.arrange(f1,f2,f3,f4, nrow=2)
 
 ```
+
+Finalmente, decidimos que el más adecuado para nuestro análisis iba a ser la estandarización (ya que con este tipo de reescalado no nos afecta tanto la presencia de outliers como en la normalización, que depende tanto del valor máximo como mínimo).
 
 ```{r, fig.align='center', warning=FALSE}
 # para variables numéricas: log_price, bedrooms, bathrooms_group, log_sqft_living, sqft_lot, floors, sqft_above, sqft_living_15, sqft_lot_15
@@ -851,38 +858,38 @@ Para este apartado nos hemos basado en la matriz de correlaciones del apartado a
 
 modelo1a<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat, data = datos_train_model)
 summary(modelo1a)
-# R_squared = 0.669, 4 variables
+
 ```
  
    -**Modelo1b**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group (0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y view.
   
-   El **Modelo1b** es capaz de explicar casi el 70%  de la variabilidad observada en el precio de las casas (R-squared: 0.6982). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.698) lo que indica que el modelo contiene predictores útiles. 
+   El **Modelo1b** es capaz de explicar casi el 70%  de la variabilidad observada en el precio de las casas (R-squared: 0.6982). El valor de $R^2$-ajustado es muy cercano al $R^2$ (Adjusted R-squared: 0.698) lo que indica que el modelo contiene predictores útiles. Sin embargo, este modelo al seleccionar la variable view, introduce 4 dummies, y por este motivo no escogeremos este modelo.
   
 ```{r, fig.align='center', warning=FALSE}
+
 modelo1b<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + view, data = datos_train_model)
 summary(modelo1b)
-# R_squared = 0.698, 5 variables
+
 ```
 
   -**Modelo2**: hemos añadido las variables que mayor correlación tienen con nuestra variable respuesta, log_sqft_living (0.65), bathrooms_group (0.49) y lat (0.46) y las que con los gráficos se visualizaba que el precio aumentaba grade_categ y waterfront.
   
-   El **Modelo2** es capaz de explicar casi el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1 (se podría volver a categorizar esta variable).
+   El **Modelo2** es capaz de explicar el 68%  de la variabilidad observada en el precio de las casas (R-squared: 0.6829 ). El valor de $R^2$-ajustado es muy  cercano al $R^2$ (Adjusted R-squared: 0.6828) lo que indica que el modelo contiene predictores útiles. El test F muestra un p-value de 0.22e-15 por lo que el modelo en conjunto es significativo. Esto se corrobora con el p-value de cada predictor, en ambos casos significativo excepto grade_categ1 (se podría volver a categorizar esta variable).
   
   Como el modelo 2, será el que finalmente elijamos, vamos a ver las diferencias entre reescalar las variables o no reescalarlas. 
   
   
 ```{r, fig.align='center', warning=FALSE}
+
 modelo2<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model)
 summary(modelo2) #-----> ELEGIDO!!
-# R_squared = 0.6828 , 5 variables
 
 modelo2_reescalado<-lm(formula = log_price ~ log_sqft_living + bathrooms_group + grade_categ + lat + waterfront, data = datos_train_model_reescalado)
-summary(modelo2_reescalado) #-----> ELEGIDO!!
-# R_squared = 0.68, 5 variables
+summary(modelo2_reescalado)
 
 ```
 
-Como se observa, vemos que los resultados se parecen mucho, de hecho sólo cambian los coeficientes, pero los p-valores de cada $Beta$ no varían. El $R^2$ y $R^2$ ajustado son los mismos. Más adelante haremos el estudio de inflacción de la varianza (VIF) y decidiremos si nos quedamos con el reescalado. 
+Como se observa, vemos que los resultados se parecen mucho, de hecho sólo cambian los coeficientes, pero los p-valores de cada $Beta$ no varían. El $R^2$ y $R^2$ ajustado son los mismos. Más adelante haremos el estudio de inflación de la varianza (VIF) y decidiremos si nos quedamos con el reescalado. 
 
 
 **Conclusión**: Hemos visto que con waterfront y view, bedrooms y bathrooms_group, y log_sqft_living y sqft_living15, respectivamente, teniendo el resto de variables iguales, afectan mínimamente al $R^2$-ajustado. Por otro lado, yr_renovated_catg y long no aportan al modelo.
@@ -896,18 +903,18 @@ Aunque el modelo1b tiene un $R^2$ mayor, estamos introduciendo más variables y 
 
 A continuación, vamos a usar el **Factor de Inflación de la Varianza (VIF)**, para ver si existe colinealidad entre las variables seleccionadas para el modelo. Los límites de referencia que se suelen emplear son:
 
- - VIF = 1: Ausencia total de colinialidad.
- - 1 < VIF < 5: La regresión puede verse afectada por cierta colinialidad.
+ - VIF = 1: Ausencia total de colinealidad.
+ - 1 < VIF < 5: La regresión puede verse afectada por cierta colinealidad.
  - 5  < VIF < 10: Causa de preocupación.
  
-El termino tolerancia es 1/VIF por lo que los límites recomendables están entre 1 y 0.1.
+El término tolerancia es 1/VIF por lo que los límites recomendables están entre 1 y 0.1.
 
 ```{r, fig.align='center', warning=FALSE}
 vif(modelo2) #nos da un factor que mida la inflacion de la varianza por tener variable co-lineales
 vif(modelo2_reescalado)
 ```
 
-En los dos modelos, con y sin reescalado,  vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena. Además, no hay diferencia entre el modelo 2 con y sin reescalado de variables numéricas.
+En los dos modelos, con y sin reescalado, vemos que no hay índices altos de colinealidad por lo que la elección de las variables es buena. Además, no hay diferencia entre el modelo 2 con y sin reescalado de variables numéricas.
 
 Por lo tanto, viendo este resultado junto al anterior decidimos quedarnos con el **modelo2 sin reeescalar**.
 
@@ -937,7 +944,7 @@ Los gráficos 1 y 3 se utilizan para contrastar gráficamente la independencia, 
 
 El gráfico Q-Q, (Gráfico 2) por su parte, se utiliza para contrastar la normalidad de los residuos. Lo deseable es que los residuos estandarizados estén lo más cerca posible a la línea punteada que aparece en el gráfico. En este estudio se ve que en los extremos se desvian de la recta.
 
-El gráfico de residuos estandarizados frente a leverages (Gráfico 4) se utiliza para detectar puntos con una influencia importante en el cálculo de las estimaciones de los parámetros. En caso de detectarse algún punto fuera de los límites que establecen las líneas discontinuas debe estudiarse este punto de forma aislada para detectar, por ejemplo, si la elevada importancia de esa observación se debe a un error.
+El gráfico de residuos estandarizados frente a leverage (Gráfico 4) se utiliza para detectar puntos con una influencia importante en el cálculo de las estimaciones de los parámetros. En caso de detectarse algún punto fuera de los límites que establecen las líneas discontinuas debe estudiarse este punto de forma aislada para detectar, por ejemplo, si la elevada importancia de esa observación se debe a un error.
 
 No parece que los residuos sigan una distribución Normal. Vamos a confirmar si esto es así mediante métodos analíticos (Test de normalidad Kolmogorov-Smirnov)
 
@@ -975,7 +982,7 @@ coef(mejor_modelo_forward,5)
 
 ```
 
-Como se observa, el $R^2$ Ajustado nos proporciona 0.7137, aumenta respecto al modelo 2 en 0.03. Pero al obtener las variables predictoras del modelo con sus coeficientes, incluye sqft_living15, la cual está altamente correlada con log_sqft_living (0.75) y nosotros la hemos descartado de nuestro modelo2.
+Como se observa, el $R^2$ Ajustado nos proporciona 0.6954, aumenta respecto al modelo 2 en 0.01. Pero al obtener las variables predictoras del modelo con sus coeficientes, incluye sqft_living15, la cual está altamente correlada con log_sqft_living (0.75) y nosotros la hemos descartado de nuestro modelo2.
 
 
 ### Backward
@@ -994,9 +1001,9 @@ coef(mejor_modelo_backward,5)
 
 ```
 
-Como se observa, el $R^2$ Ajustado nos proporciona 0.712, aumenta respecto al modelo 2 en 0.03. Pero al obtener las variables predictoras del modelo con sus coeficientes, incluye sqft_living15, la cual está altamente correlada con log_sqft_living (0.75) y nosotros la hemos descartado de nuestro modelo2.
+Como se observa, el $R^2$ Ajustado nos proporciona 0.6954, aumenta respecto al modelo 2 en 0.01. Pero al obtener las variables predictoras del modelo con sus coeficientes, incluye sqft_living15, la cual está altamente correlada con log_sqft_living (0.75) y nosotros la hemos descartado de nuestro modelo2.
 
-**Conclusión**: Se han usado las técnicas de selección automática para ver si podíamos aumentar el coeficiente de correlación significativamente, pero observamos que apenas sube (0.03) respecto al modelo que hemos construido manualmente (modelo2), por lo que finalmente elegimos el modelo2, ya que pensamos que es el modelo que permite predecir con mayor precisión el precio de las casas.
+**Conclusión**: Se han usado las técnicas de selección automática para ver si podíamos aumentar el coeficiente de correlación significativamente, pero observamos que apenas sube (0.01) respecto al modelo que hemos construido manualmente (modelo2), por lo que finalmente elegimos el modelo2, ya que pensamos que es el modelo que permite predecir con mayor precisión el precio de las casas.
 
 
 # Test
@@ -1005,8 +1012,6 @@ Una vez realizado el análisis exploratorio de datos e implementado el modelo, v
 
 
 ```{r, fig.align='center', warning=FALSE}
-
-# TRANSFORMAR LOS DATOS DE TEST CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
 
 #id
 datos_test$id <- as.factor(datos_test$id)
@@ -1079,10 +1084,9 @@ dif_media_test_unidades_naturales2
 
 # Validación
 
-Como los resultados usando los datos de test son buenos, realizamos una última comprobación repitiendo el mismo proceso con los datos de validación. Realizamos las transformaciones y obtenemos la predicción del precio usando el modelo 2.
+Una vez obtenidos los resultados con los datos de test, realizamos una última comprobación repitiendo el mismo proceso con los datos de validación. Realizamos las transformaciones y obtenemos la predicción del precio usando el modelo 2.
 
 ```{r, fig.align='center', warning=FALSE}
-# TRANSFORMAR LOS DATOS DE VALIDACIÓN CONFORME A LO QUE HABÍAMOS DECIDIDO EN TRAIN:
 
 #id
 datos_validacion$id <- as.factor(datos_validacion$id)
@@ -1125,7 +1129,7 @@ predict_precio_validacion <- as.data.frame(predict(modelo2, newdata = datos_vali
 colnames(predict_precio_validacion)[1] <- "precio_pred"
 ```
 
-## Variable respuesta validacion vs valor predicho
+## Variable respuesta validación vs valor predicho
 
 ```{r, fig.align='center', warning=FALSE}
 datos_validacion_mod$id_aux <- rownames(datos_validacion_mod)
@@ -1169,8 +1173,8 @@ Por último, concluimos lo siguiente:
 
 ## Líneas futuras
 
-Con la información obtenida de la selección de variables automática, y los resultados del modelo, se podrían plantear como trabajos futuros, la recategorización de algunas variables, como por ejemplo, view. Rechazamos el modelo 3, aunque poseía mejores métricas que el modelo 2, porque view introducía 4 variables dummies y waterfront solo 1. Podría analizarse si view podría agruparse de otro modo.
+Con la información obtenida de la selección de variables automática, y los resultados del modelo, se podrían plantear como trabajos futuros, la recategorización de algunas variables, como por ejemplo, view. Rechazamos el modelo 1b, aunque poseía mejores métricas que el modelo 2, porque view introducía 4 variables dummies y waterfront solo 1. Podría analizarse si view podría agruparse de otro modo.
 
-También se podría estudiar como se relaciona yr_built con price, y si podría aportar información al modelo. Lo mismo ocurre con zipcode, esta variable no la hemos considerado a estudio por poseer múltiples categorías, pero quizá agrupandola en subcategorías podría ser otra variable a considerar para el modelo.
+También se podría estudiar cómo se relaciona yr_built con price, y si podría aportar información al modelo. Lo mismo ocurre con zipcode, esta variable no la hemos considerado a estudio por poseer múltiples categorías, pero quizá agrupándola en subcategorías podría ser otra variable a considerar para el modelo.
 
 Por último, hemos comprobado que con un modelo de regresión lineal no llega a precisar todo lo que nos gustaría, por lo que podemos probar si aplicando otros modelos se podrían conseguir mejores resultados. 
